@@ -1,66 +1,81 @@
 <template>
-  <div class="classroom">
-    <div class="class-info-wrapper">
-      <div class="top-wrapper">
-        <div class="app-info">
-          <img src="../assets/images/favicon.svg" class="logo" />
-          <div class="info-wrapper">
-            <div class="app-name">四八班教室座位安排</div>
-            <div class="app-desc">班主任：杨玥辰</div>
+  <div class="h-full bg-gradient-to-br from-[#eff6ff] to-[#e0e7ff] flex flex-col items-center gap-6 p-6 box-border overflow-hidden">
+    <div class="flex-shrink-0 p-6 flex flex-col items-start gap-6 self-stretch rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
+      <div class="w-full flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="../assets/images/favicon.svg" class="w-14 h-14 object-contain" />
+          <div class="flex flex-col">
+            <div class="text-[#312c85] text-2xl leading-9">四八班教室座位安排</div>
+            <div class="text-[#4a5565] text-base leading-6">班主任：杨玥辰</div>
           </div>
         </div>
-        <div class="student-count">
-          <img src="../assets/images/total-user.svg" class="count-icon" />
-          <div class="count">学生总数: {{ totalStudentCount }}</div>
+        <div class="flex items-center gap-2">
+          <img src="../assets/images/total-user.svg" class="w-5 h-5 object-contain" />
+          <div class="text-[#364153] text-base leading-6">学生总数: {{ totalStudentCount }}</div>
         </div>
       </div>
     </div>
-    <div class="main-wrapper">
-      <div class="seat-table-wrapper">
-        <div class="title">座位图</div>
+    <div class="flex-1 overflow-hidden w-full flex gap-6">
+      <div class="flex-1 p-6 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
+        <div class="flex items-center self-stretch text-[#101828] text-base leading-6 mb-4">座位图</div>
+
         <!-- 讲台 -->
-        <div class="platform">讲 台</div>
+        <div class="mb-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] bg-gradient-to-r from-[#00c950] to-[#00bc7d] text-white text-center text-base leading-6">
+          讲 台
+        </div>
 
         <!-- 分组 -->
-        <div class="groups">
-          <div v-for="gIndex in cols / 2" :key="gIndex" class="group-item">
+        <div class="w-full grid grid-cols-4 gap-5 mb-6">
+          <div
+            v-for="gIndex in cols / 2"
+            :key="gIndex"
+            class="text-center py-3 border-none rounded-xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)] transition-all duration-300 ease-[ease] hover:-translate-y-[3px] hover:shadow-[0_6px_15px_rgba(108,92,231,0.3)]"
+          >
             {{ `第${numberToChinese(gIndex)}组` }}
           </div>
         </div>
 
         <!-- 座位网格 -->
-        <div class="seat-grid" :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }">
+        <div class="w-full grid gap-5" :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }">
           <div
             v-for="(seat, index) in seats"
             :key="index"
-            class="seat-cell"
-            :class="{ 'no-student': !seat.studentId }"
+            class="w-full h-[120px] rounded-[10px] border-2 flex items-center justify-center relative transition-all duration-300 ease-[ease]"
+            :class="[
+              seat.studentId
+                ? 'border-[#a3b3ff] bg-gradient-to-br from-[#eef2ff] to-[#faf5ff]'
+                : 'border-dashed border-[#d1d5dc] bg-[#f9fafb]',
+              'hover:border-solid hover:scale-[1.03]'
+            ]"
             @dragover.prevent
             @drop="onDrop($event, index)"
           >
             <div
               v-if="seat.studentId"
-              class="student-card draggable-card"
+              class="w-full h-full flex flex-col items-center justify-center text-[#101828] text-xl leading-5 cursor-move relative group"
               draggable="true"
               @dragstart="onDragStart($event, index)"
             >
               {{ seat.studentName }}
-              <div class="student-id">{{ seat.studentId }}</div>
+              <div class="absolute left-2 top-2 w-8 h-8 rounded-full bg-[#e5e7eb] flex items-center justify-center text-[#4a5565] text-base leading-4">
+                {{ seat.studentId }}
+              </div>
               <img
                 src="../assets/images/delete.svg"
-                class="delete-icon"
+                class="hidden group-hover:block absolute right-2 top-2 w-8 h-8 object-contain cursor-pointer"
                 @click="handleUnSeat(seat)"
               />
             </div>
-            <div v-else class="no-student">
-              <img src="../assets/images/no-user.svg" alt="" class="no-student-icon" />
+            <div v-else class="w-full h-full flex flex-col items-center justify-center">
+              <img src="../assets/images/no-user.svg" alt="" class="w-8 h-8 object-contain" />
             </div>
           </div>
         </div>
       </div>
-      <div class="student-info-wrapper">
-        <div class="title">学生列表</div>
-        <div class="search-wrapper">
+      <div class="w-[410px] p-6 flex-shrink-0 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] overflow-hidden">
+        <div class="flex-shrink-0 flex items-center self-stretch text-[#101828] text-base leading-6 mb-4">学生列表</div>
+
+        <div class="w-full flex items-center gap-2 mb-6">
           <el-input
             v-model="searchKey"
             placeholder="请输入学生姓名/学号"
@@ -68,41 +83,42 @@
             :prefix-icon="Search"
             style="height: 36px"
           ></el-input>
-          <!-- <el-button type="primary" @click="handleSearch">搜索</el-button> -->
         </div>
-        <div class="seat-status-wrapper">
+
+        <div class="flex-shrink-0 w-full flex items-center gap-3 mb-6">
           <div
-            class="status-box seated"
-            :class="{ active: activeStudentStatus === 'seated' }"
+            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#f0fdf4] transition-all"
+            :class="activeStudentStatus === 'seated' ? 'border-[#00a63e]' : 'border-[#b9f8cf]'"
             @click="activeStudentStatus = 'seated'"
           >
-            <div class="label">已就座</div>
-            <div class="desc">{{ seatedStudentCount }}人</div>
+            <div class="text-[#0d542b] text-base leading-6 mb-1">已就座</div>
+            <div class="text-[#00a63e] text-base leading-6">{{ seatedStudentCount }}人</div>
           </div>
           <div
-            class="status-box not-seated"
-            :class="{ active: activeStudentStatus === 'unSeated' }"
+            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#fff7ed] transition-all"
+            :class="activeStudentStatus === 'unSeated' ? 'border-[#f54900]' : 'border-[#ffd6a7]'"
             @click="activeStudentStatus = 'unSeated'"
           >
-            <div class="label">未就座</div>
-            <div class="desc">{{ totalStudentCount - seatedStudentCount }}人</div>
+            <div class="text-[#7e2a0c] text-base leading-6 mb-1">未就座</div>
+            <div class="text-[#f54900] text-base leading-6">{{ totalStudentCount - seatedStudentCount }}人</div>
           </div>
         </div>
-        <div v-show="activeStudentStatus === 'seated'" class="status-list-wrapper">
-          <div class="title">已分配座位</div>
-          <div class="list-wrapper">
+
+        <div v-show="activeStudentStatus === 'seated'" class="w-full flex-1 flex flex-col overflow-hidden">
+          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">已分配座位</div>
+          <div class="w-full flex-1 overflow-y-auto flex flex-col gap-2">
             <div
               v-for="seat in filteredHasStudentSeatList"
               :key="seat.studentId!"
-              class="list-item seated"
+              class="w-full p-3 box-border flex rounded-[10px] border border-[#b9f8cf] bg-[#f0fdf4]"
             >
-              <div class="left-wrapper">
-                <div class="student-icon">
-                  <img src="../assets/images/plain-user.svg" />
+              <div class="flex items-center gap-2">
+                <div class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#00c950]">
+                  <img src="../assets/images/plain-user.svg" class="w-4 h-4 flex-shrink-0 object-contain" />
                 </div>
-                <div class="student-info">
-                  <div class="name">{{ seat.studentName }}</div>
-                  <div class="seat-number">
+                <div>
+                  <div class="text-[#101828] text-base leading-6 mb-[2px]">{{ seat.studentName }}</div>
+                  <div class="text-[#4a5565] text-xs leading-4">
                     座位号：{{ seat.id }}（第{{ seat.row }}排第{{ seat.col }}个）
                   </div>
                 </div>
@@ -110,22 +126,23 @@
             </div>
           </div>
         </div>
-        <div v-show="activeStudentStatus === 'unSeated'" class="status-list-wrapper">
-          <div class="title">未分配座位</div>
-          <div class="list-wrapper">
+
+        <div v-show="activeStudentStatus === 'unSeated'" class="w-full flex-1 flex flex-col overflow-hidden">
+          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">未分配座位</div>
+          <div class="w-full flex-1 overflow-y-auto flex flex-col gap-2">
             <div
               v-for="student in filteredUnSeatedStudentList"
               :key="student.id"
-              class="list-item not-seated"
+              class="w-full p-3 box-border flex rounded-[10px] border border-[#ffd6a7] bg-[#fff7ed] cursor-move"
               draggable="true"
               @dragstart="onStudentDragStart($event, student)"
             >
-              <div class="left-wrapper">
-                <div class="student-icon">
-                  <img src="../assets/images/plain-user.svg" />
+              <div class="flex items-center gap-2">
+                <div class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#f54900]">
+                  <img src="../assets/images/plain-user.svg" class="w-4 h-4 flex-shrink-0 object-contain" />
                 </div>
-                <div class="student-info">
-                  <div class="name">{{ student.name }}</div>
+                <div>
+                  <div class="text-[#101828] text-base leading-6">{{ student.name }}</div>
                 </div>
               </div>
             </div>
@@ -232,11 +249,6 @@ watch([rows, cols], () => {
 // 初始化座位
 initSeats()
 
-// 重置座位
-// const resetSeats = () => {
-//   initSeats()
-// }
-
 // 拖拽开始事件
 const onDragStart = (event: DragEvent, index: number) => {
   if (event.dataTransfer) {
@@ -325,466 +337,4 @@ const filteredUnSeatedStudentList = computed(() => {
       (student.id && student.id.toString().includes(keyword)),
   )
 })
-
-// 添加搜索处理方法
-// const handleSearch = () => {
-//   // 搜索逻辑已在computed属性中实现，这里可以留空或者添加其他操作
-// }
 </script>
-
-<style lang="scss" scoped>
-.classroom {
-  height: 100%;
-  background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%), #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-  padding: 24px;
-  box-sizing: border-box;
-  overflow: hidden;
-  > .class-info-wrapper {
-    flex-shrink: 0;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 24px;
-    flex-shrink: 0;
-    align-self: stretch;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow:
-      0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    .top-wrapper {
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      > .app-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        > .logo {
-          width: 56px;
-          height: 56px;
-          object-fit: contain;
-        }
-        > .info-wrapper {
-          display: flex;
-          flex-direction: column;
-          > .app-name {
-            color: #312c85;
-            font-family: Arimo;
-            font-size: 24px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 36px; /* 150% */
-          }
-          > .app-desc {
-            color: #4a5565;
-            font-family: Arimo;
-            font-size: 16px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 24px; /* 150% */
-          }
-        }
-      }
-      > .student-count {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        > .count-icon {
-          width: 20px;
-          height: 20px;
-          object-fit: contain;
-        }
-        > .count {
-          color: #364153;
-          font-family: Arimo;
-          font-size: 16px;
-          font-style: normal;
-          font-weight: 400;
-          line-height: 24px; /* 150% */
-        }
-      }
-    }
-  }
-  > .main-wrapper {
-    flex: 1;
-    overflow: hidden;
-    width: 100%;
-    display: flex;
-    gap: 24px;
-    > .seat-table-wrapper {
-      flex: 1;
-      padding: 24px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow:
-        0 10px 15px -3px rgba(0, 0, 0, 0.1),
-        0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      > .title {
-        display: flex;
-        align-items: center;
-        align-self: stretch;
-        color: #101828;
-        font-family: Arimo;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 24px; /* 150% */
-        margin-bottom: 16px;
-      }
-
-      /* 讲台 */
-      > .platform {
-        margin-bottom: 20px;
-        display: flex;
-        padding: 11px 0 13px 0;
-        justify-content: center;
-        align-items: center;
-        align-self: stretch;
-        border-radius: 10px;
-        background: linear-gradient(90deg, #00c950 0%, #00bc7d 100%);
-        color: #fff;
-        text-align: center;
-        font-family: Arimo;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 24px; /* 150% */
-      }
-
-      /* 分组 */
-      > .groups {
-        width: 100%;
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 24px;
-
-        > .group-item {
-          text-align: center;
-          padding: 12px 0;
-          border: none;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
-          color: #fff;
-          font-weight: 600;
-          box-shadow: 0 4px 10px rgba(108, 92, 231, 0.2);
-          transition: all 0.3s ease;
-
-          &:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
-          }
-        }
-      }
-
-      /* 座位网格 */
-      .seat-grid {
-        width: 100%;
-        display: grid;
-        gap: 20px;
-        /* 座位框 */
-        .seat-cell {
-          width: 100%;
-          height: 120px;
-          border-radius: 10px;
-          border: 2px solid #a3b3ff;
-          background: linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-          transition: all 0.3s ease;
-
-          &.no-student {
-            border: 2px dashed #d1d5dc;
-            background: #f9fafb;
-          }
-
-          &:hover {
-            border-style: solid;
-            transform: scale(1.03);
-          }
-
-          > .student-card {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: #101828;
-            font-family: Arimo;
-            font-size: 20px;
-            font-style: normal;
-            font-weight: 400;
-            line-height: 20px;
-            cursor: move;
-            position: relative;
-            &:hover {
-              > .delete-icon {
-                display: block;
-              }
-            }
-            > .student-id {
-              position: absolute;
-              left: 8px;
-              top: 8px;
-              width: 32px;
-              height: 32px;
-              border-radius: 50%;
-              background: #e5e7eb;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #4a5565;
-              font-family: Arimo;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 400;
-              line-height: 16px; /* 133.333% */
-            }
-            > .delete-icon {
-              display: none;
-              position: absolute;
-              right: 8px;
-              top: 8px;
-              width: 32px;
-              height: 32px;
-              object-fit: contain;
-              cursor: pointer;
-            }
-          }
-
-          > .no-student {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-
-            > .no-student-icon {
-              width: 32px;
-              height: 32px;
-              // background-image: url('../assets/images/no-user.svg');
-              // background-size: 100% 100%;
-              // background-repeat: no-repeat;
-              object-fit: contain;
-            }
-          }
-        }
-      }
-    }
-    > .student-info-wrapper {
-      width: 410px;
-      padding: 24px;
-      flex-shrink: 0;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      border-radius: 10px;
-      background: #fff;
-      box-shadow:
-        0 10px 15px -3px rgba(0, 0, 0, 0.1),
-        0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-
-      > .title {
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        align-self: stretch;
-        color: #101828;
-        font-family: Arimo;
-        font-size: 16px;
-        font-style: normal;
-        font-weight: 400;
-        line-height: 24px;
-        margin-bottom: 16px;
-      }
-
-      > .search-wrapper {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 24px;
-      }
-
-      > .seat-status-wrapper {
-        flex-shrink: 0;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 24px;
-        > .status-box {
-          flex: 1;
-          height: 74px;
-          padding: 12px;
-          box-sizing: border-box;
-          cursor: pointer;
-          &.seated {
-            border-radius: 10px;
-            border: 1px solid #b9f8cf;
-            background: #f0fdf4;
-            &.active {
-              border-color: #00a63e !important;
-              border-width: 1px !important;
-            }
-            > .label {
-              color: #0d542b;
-              font-family: Arimo;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 400;
-              line-height: 24px; /* 150% */
-              margin-bottom: 4px;
-            }
-
-            > .desc {
-              color: #00a63e;
-              font-family: Arimo;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 400;
-              line-height: 24px; /* 150% */
-            }
-          }
-          &.not-seated {
-            border-radius: 10px;
-            border: 1px solid #ffd6a7;
-            background: #fff7ed;
-            &.active {
-              border-color: #f54900 !important;
-              border-width: 1px !important;
-            }
-            > .label {
-              color: #7e2a0c;
-              font-family: Arimo;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 400;
-              line-height: 24px; /* 150% */
-              margin-bottom: 4px;
-            }
-
-            > .desc {
-              color: #f54900;
-              font-family: Arimo;
-              font-size: 16px;
-              font-style: normal;
-              font-weight: 400;
-              line-height: 24px; /* 150% */
-            }
-          }
-        }
-      }
-
-      > .status-list-wrapper {
-        width: 100%;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        > .title {
-          flex-shrink: 0;
-          color: #364153;
-          font-family: Arimo;
-          font-size: 16px;
-          font-style: normal;
-          font-weight: 400;
-          line-height: 24px; /* 150% */
-          margin-bottom: 12px;
-        }
-        > .list-wrapper {
-          width: 100%;
-          flex: 1;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          > .list-item {
-            width: 100%;
-            padding: 12px;
-            box-sizing: border-box;
-            display: flex;
-            &.seated {
-              border-radius: 10px;
-              border: 1px solid #b9f8cf;
-              background: #f0fdf4;
-              > .left-wrapper {
-                .student-icon {
-                  background: #00c950;
-                }
-              }
-            }
-            &.not-seated {
-              border-radius: 10px;
-              border: 1px solid #ffd6a7;
-              background: #fff7ed;
-              > .left-wrapper {
-                .student-icon {
-                  background: #f54900;
-                }
-              }
-              cursor: move;
-            }
-            > .left-wrapper {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              > .student-icon {
-                display: flex;
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                justify-content: center;
-                align-items: center;
-                flex-shrink: 0;
-                img {
-                  width: 16px;
-                  height: 16px;
-                  flex-shrink: 0;
-                  object-fit: contain;
-                }
-              }
-              > .student-info {
-                > .name {
-                  color: #101828;
-                  font-family: Arimo;
-                  font-size: 16px;
-                  font-style: normal;
-                  font-weight: 400;
-                  line-height: 24px; /* 150% */
-                  margin-bottom: 2px;
-                }
-                > .seat-number {
-                  color: #4a5565;
-                  font-family: Arimo;
-                  font-size: 12px;
-                  font-style: normal;
-                  font-weight: 400;
-                  line-height: 16px; /* 133.333% */
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-</style>
