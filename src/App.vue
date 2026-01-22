@@ -1,8 +1,6 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue';
-import Hello from './Hello/index.vue'
-import Read from './Read/index.vue'
-import Write from './Write/index.vue'
+import SeatTable from './components/SeatTable.vue'
 
 const route = ref('')
 const enterAction = ref({})
@@ -19,13 +17,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <template v-if="route === 'hello'">
-    <Hello :enterAction="enterAction"></Hello>
-  </template>
-  <template v-if="route === 'read'">
-    <Read :enterAction="enterAction"></Read>
-  </template>
-  <template v-if="route === 'write'">
-    <Write :enterAction="enterAction"></Write>
+  <template v-if="route === 'seatTable'">
+    <SeatTable />
   </template>
 </template>
+
+<style>
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+</style>

@@ -5,6 +5,11 @@
     "build": "vite build"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.2",
+    "element-plus": "^2.13.1",
+    "sass": "^1.97.3",
+    "unplugin-auto-import": "^21.0.0",
+    "unplugin-vue-components": "^31.0.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
