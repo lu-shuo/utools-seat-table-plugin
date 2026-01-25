@@ -6,13 +6,20 @@ const route = ref('')
 const enterAction = ref({})
 
 onMounted(() => {
-  window.utools.onPluginEnter((action) => {
-    route.value = action.code
-    enterAction.value = action
-  })
-  window.utools.onPluginOut((isKill) => {
-    route.value = ''
-  })
+  // 检查是否在 utools 环境中
+  if (window.utools) {
+    window.utools.onPluginEnter((action) => {
+      route.value = action.code
+      enterAction.value = action
+    })
+    window.utools.onPluginOut((isKill) => {
+      route.value = ''
+    })
+  } else {
+    // 普通浏览器环境，默认显示 seatTable 用于调试
+    route.value = 'seatTable'
+    console.log('Running in browser mode (not utools)')
+  }
 })
 </script>
 
