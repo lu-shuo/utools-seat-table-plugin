@@ -1,51 +1,85 @@
 <template>
-  <div class="h-full bg-gradient-to-br from-[#eff6ff] to-[#e0e7ff] flex flex-col items-center gap-6 p-6 box-border overflow-hidden">
-    <div class="flex-shrink-0 p-6 flex flex-col items-start gap-6 self-stretch rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
-      <div class="w-full flex items-center justify-between">
+  <div
+    class="h-full bg-gradient-to-br from-[#eff6ff] to-[#e0e7ff] flex flex-col items-center gap-6 p-6 box-border overflow-hidden"
+  >
+    <div
+      class="flex-shrink-0 p-6 flex flex-col items-start gap-6 self-stretch rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
+    >
+      <div class="flex items-center justify-between w-full">
         <div class="flex items-center gap-3">
-          <img src="../assets/images/favicon.svg" class="w-14 h-14 object-contain" />
+          <img
+            src="../assets/images/favicon.svg"
+            class="object-contain w-14 h-14"
+          />
           <div class="flex flex-col">
-            <div class="text-[#312c85] text-2xl leading-9">四八班教室座位安排</div>
+            <div class="text-[#312c85] text-2xl leading-9">
+              四八班教室座位安排
+            </div>
             <div class="text-[#4a5565] text-base leading-6">班主任：杨玥辰</div>
           </div>
         </div>
-        <div class="flex items-center gap-2">
-          <img src="../assets/images/total-user.svg" class="w-5 h-5 object-contain" />
-          <div class="text-[#364153] text-base leading-6">学生总数: {{ totalStudentCount }}</div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <img
+              src="../assets/images/total-user.svg"
+              class="object-contain w-5 h-5"
+            />
+            <div class="text-[#364153] text-base leading-6">
+              学生总数: {{ totalStudentCount }}
+            </div>
+          </div>
+          <el-button type="primary" @click="resetSeats">重置座位</el-button>
         </div>
       </div>
     </div>
-    <div class="flex-1 overflow-hidden w-full flex gap-6">
-      <div class="flex-1 p-6 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]">
-        <div class="flex items-center self-stretch text-[#101828] text-base leading-6 mb-4">座位图</div>
+    <div
+      class="flex-1 overflow-hidden w-full flex gap-6 bg-gradient-to-br from-[#eff6ff] to-[#e0e7ff]"
+      ref="mainWrapperEl"
+    >
+      <div
+        class="flex-1 overflow-y-auto p-6 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
+      >
+        <div
+          class="flex items-center justify-between self-stretch text-[#101828] text-base leading-6 mb-4"
+        >
+          座位图
+          <el-button link type="primary" @click="toggleFullscreen">{{
+            isFullscreen ? '退出全屏' : '全屏排位'
+          }}</el-button>
+        </div>
 
         <!-- 讲台 -->
-        <div class="mb-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] bg-gradient-to-r from-[#00c950] to-[#00bc7d] text-white text-center text-base leading-6">
+        <div
+          class="mb-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] bg-gradient-to-r from-[#00c950] to-[#00bc7d] text-white text-center text-base leading-6"
+        >
           讲 台
         </div>
 
         <!-- 分组 -->
-        <div class="w-full grid grid-cols-4 gap-5 mb-6">
+        <div class="grid w-full grid-cols-4 gap-5 mb-6">
           <div
             v-for="gIndex in cols / 2"
             :key="gIndex"
-            class="text-center py-3 border-none rounded-xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)] transition-all duration-300 ease-[ease] hover:-translate-y-[3px] hover:shadow-[0_6px_15px_rgba(108,92,231,0.3)]"
+            class="text-center py-3 border-none rounded-xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)] transition-all duration-300 ease hover:-translate-y-[3px] hover:shadow-[0_6px_15px_rgba(108,92,231,0.3)]"
           >
             {{ `第${numberToChinese(gIndex)}组` }}
           </div>
         </div>
 
         <!-- 座位网格 -->
-        <div class="w-full grid gap-5" :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }">
+        <div
+          class="grid w-full gap-5"
+          :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }"
+        >
           <div
             v-for="(seat, index) in seats"
             :key="index"
-            class="w-full h-[120px] rounded-[10px] border-2 flex items-center justify-center relative transition-all duration-300 ease-[ease]"
+            class="w-full h-[120px] rounded-[10px] border-2 flex items-center justify-center relative transition-all duration-300 ease"
             :class="[
               seat.studentId
                 ? 'border-[#a3b3ff] bg-gradient-to-br from-[#eef2ff] to-[#faf5ff]'
                 : 'border-dashed border-[#d1d5dc] bg-[#f9fafb]',
-              'hover:border-solid hover:scale-[1.03]'
+              'hover:border-solid hover:scale-[1.03]',
             ]"
             @dragover.prevent
             @drop="onDrop($event, index)"
@@ -57,25 +91,40 @@
               @dragstart="onDragStart($event, index)"
             >
               {{ seat.studentName }}
-              <div class="absolute left-2 top-2 w-8 h-8 rounded-full bg-[#e5e7eb] flex items-center justify-center text-[#4a5565] text-base leading-4">
+              <div
+                class="absolute left-2 top-2 w-8 h-8 rounded-full bg-[#e5e7eb] flex items-center justify-center text-[#4a5565] text-base leading-4"
+              >
                 {{ seat.studentId }}
               </div>
               <img
                 src="../assets/images/delete.svg"
-                class="hidden group-hover:block absolute right-2 top-2 w-8 h-8 object-contain cursor-pointer"
+                class="absolute hidden object-contain w-8 h-8 cursor-pointer group-hover:block right-2 top-2"
                 @click="handleUnSeat(seat)"
               />
             </div>
-            <div v-else class="w-full h-full flex flex-col items-center justify-center">
-              <img src="../assets/images/no-user.svg" alt="" class="w-8 h-8 object-contain" />
+            <div
+              v-else
+              class="flex flex-col items-center justify-center w-full h-full"
+            >
+              <img
+                src="../assets/images/no-user.svg"
+                alt=""
+                class="object-contain w-8 h-8"
+              />
             </div>
           </div>
         </div>
       </div>
-      <div class="w-[410px] p-6 flex-shrink-0 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] overflow-hidden">
-        <div class="flex-shrink-0 flex items-center self-stretch text-[#101828] text-base leading-6 mb-4">学生列表</div>
+      <div
+        class="w-[410px] p-6 flex-shrink-0 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)] overflow-hidden"
+      >
+        <div
+          class="flex-shrink-0 flex items-center self-stretch text-[#101828] text-base leading-6 mb-4"
+        >
+          学生列表
+        </div>
 
-        <div class="w-full flex items-center gap-2 mb-6">
+        <div class="flex items-center w-full gap-2 mb-6">
           <el-input
             v-model="searchKey"
             placeholder="请输入学生姓名/学号"
@@ -85,41 +134,67 @@
           ></el-input>
         </div>
 
-        <div class="flex-shrink-0 w-full flex items-center gap-3 mb-6">
+        <div class="flex items-center flex-shrink-0 w-full gap-3 mb-6">
           <div
-            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#f0fdf4] transition-all"
-            :class="activeStudentStatus === 'seated' ? 'border-[#00a63e]' : 'border-[#b9f8cf]'"
+            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#f0fdf4]"
+            :class="
+              activeStudentStatus === 'seated'
+                ? 'border-[#00a63e]'
+                : 'border-[#b9f8cf]'
+            "
             @click="activeStudentStatus = 'seated'"
           >
             <div class="text-[#0d542b] text-base leading-6 mb-1">已就座</div>
-            <div class="text-[#00a63e] text-base leading-6">{{ seatedStudentCount }}人</div>
+            <div class="text-[#00a63e] text-base leading-6">
+              {{ seatedStudentCount }}人
+            </div>
           </div>
           <div
-            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#fff7ed] transition-all"
-            :class="activeStudentStatus === 'unSeated' ? 'border-[#f54900]' : 'border-[#ffd6a7]'"
+            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#fff7ed]"
+            :class="
+              activeStudentStatus === 'unSeated'
+                ? 'border-[#f54900]'
+                : 'border-[#ffd6a7]'
+            "
             @click="activeStudentStatus = 'unSeated'"
           >
             <div class="text-[#7e2a0c] text-base leading-6 mb-1">未就座</div>
-            <div class="text-[#f54900] text-base leading-6">{{ totalStudentCount - seatedStudentCount }}人</div>
+            <div class="text-[#f54900] text-base leading-6">
+              {{ totalStudentCount - seatedStudentCount }}人
+            </div>
           </div>
         </div>
 
-        <div v-show="activeStudentStatus === 'seated'" class="w-full flex-1 flex flex-col overflow-hidden">
-          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">已分配座位</div>
-          <div class="w-full flex-1 overflow-y-auto flex flex-col gap-2">
+        <div
+          v-show="activeStudentStatus === 'seated'"
+          class="flex flex-col flex-1 w-full overflow-hidden"
+        >
+          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">
+            已分配座位
+          </div>
+          <div class="flex flex-col flex-1 w-full gap-2 overflow-y-auto">
             <div
               v-for="seat in filteredHasStudentSeatList"
               :key="seat.studentId!"
               class="w-full p-3 box-border flex rounded-[10px] border border-[#b9f8cf] bg-[#f0fdf4]"
             >
               <div class="flex items-center gap-2">
-                <div class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#00c950]">
-                  <img src="../assets/images/plain-user.svg" class="w-4 h-4 flex-shrink-0 object-contain" />
+                <div
+                  class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#00c950]"
+                >
+                  <img
+                    src="../assets/images/plain-user.svg"
+                    class="flex-shrink-0 object-contain w-4 h-4"
+                  />
                 </div>
                 <div>
-                  <div class="text-[#101828] text-base leading-6 mb-[2px]">{{ seat.studentName }}</div>
+                  <div class="text-[#101828] text-base leading-6 mb-[2px]">
+                    {{ seat.studentName }}
+                  </div>
                   <div class="text-[#4a5565] text-xs leading-4">
-                    座位号：{{ seat.id }}（第{{ seat.row }}排第{{ seat.col }}个）
+                    座位号：{{ seat.id }}（第{{ seat.row }}排第{{
+                      seat.col
+                    }}个）
                   </div>
                 </div>
               </div>
@@ -127,9 +202,14 @@
           </div>
         </div>
 
-        <div v-show="activeStudentStatus === 'unSeated'" class="w-full flex-1 flex flex-col overflow-hidden">
-          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">未分配座位</div>
-          <div class="w-full flex-1 overflow-y-auto flex flex-col gap-2">
+        <div
+          v-show="activeStudentStatus === 'unSeated'"
+          class="flex flex-col flex-1 w-full overflow-hidden"
+        >
+          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">
+            未分配座位
+          </div>
+          <div class="flex flex-col flex-1 w-full gap-2 overflow-y-auto">
             <div
               v-for="student in filteredUnSeatedStudentList"
               :key="student.id"
@@ -138,11 +218,18 @@
               @dragstart="onStudentDragStart($event, student)"
             >
               <div class="flex items-center gap-2">
-                <div class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#f54900]">
-                  <img src="../assets/images/plain-user.svg" class="w-4 h-4 flex-shrink-0 object-contain" />
+                <div
+                  class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#f54900]"
+                >
+                  <img
+                    src="../assets/images/plain-user.svg"
+                    class="flex-shrink-0 object-contain w-4 h-4"
+                  />
                 </div>
                 <div>
-                  <div class="text-[#101828] text-base leading-6">{{ student.name }}</div>
+                  <div class="text-[#101828] text-base leading-6">
+                    {{ student.name }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -154,12 +241,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, useTemplateRef } from 'vue'
 import { numberToChinese } from '@/utils'
 import { INITIAL_SEATS } from '@/config'
 import type { Seat } from '@/interface'
 import { STUDENT_LIST } from '@/config'
 import { Search } from '@element-plus/icons-vue'
+import { useFullscreen } from '@vueuse/core'
 
 // 行列配置
 const rows = ref(6)
@@ -249,6 +337,28 @@ watch([rows, cols], () => {
 // 初始化座位
 initSeats()
 
+// 重置座位
+const resetSeats = () => {
+  seats.value = Array(totalSeats.value)
+    .fill(null)
+    .map((_, index) => {
+      const row = Math.floor(index / cols.value) + 1
+      const col = (index % cols.value) + 1
+
+      const target = INITIAL_SEATS.find((seat) => seat.id === index + 1)
+      return {
+        id: index + 1,
+        studentId: target ? target.studentId : null,
+        studentName: target ? target.studentName : null,
+        row: target ? target.row : row,
+        col: target ? target.col : col,
+      }
+    })
+}
+
+const mainWrapperEl = useTemplateRef('mainWrapperEl')
+const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(mainWrapperEl)
+
 // 拖拽开始事件
 const onDragStart = (event: DragEvent, index: number) => {
   if (event.dataTransfer) {
@@ -258,9 +368,15 @@ const onDragStart = (event: DragEvent, index: number) => {
 }
 
 // 新增：处理从未分配学生列表拖拽学生
-const onStudentDragStart = (event: DragEvent, student: (typeof STUDENT_LIST)[0]) => {
+const onStudentDragStart = (
+  event: DragEvent,
+  student: (typeof STUDENT_LIST)[0],
+) => {
   if (event.dataTransfer) {
-    event.dataTransfer.setData('application/student-data', JSON.stringify(student))
+    event.dataTransfer.setData(
+      'application/student-data',
+      JSON.stringify(student),
+    )
     event.dataTransfer.effectAllowed = 'move'
   }
 }
