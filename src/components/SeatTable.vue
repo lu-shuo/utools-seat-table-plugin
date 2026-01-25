@@ -1,6 +1,7 @@
 <template>
   <div
-    class="h-full bg-gradient-to-br from-[#eff6ff] to-[#e0e7ff] flex flex-col items-center gap-6 p-6 box-border overflow-hidden"
+    class="h-full flex flex-col items-center gap-6 p-6 box-border overflow-hidden"
+    style="background: #eff6ff; background: -webkit-linear-gradient(135deg, #eff6ff, #e0e7ff); background: -moz-linear-gradient(135deg, #eff6ff, #e0e7ff); background: linear-gradient(135deg, #eff6ff, #e0e7ff);"
   >
     <div
       class="flex-shrink-0 p-6 flex flex-col items-start gap-6 self-stretch rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
@@ -33,7 +34,8 @@
       </div>
     </div>
     <div
-      class="flex-1 overflow-hidden w-full flex gap-6 bg-gradient-to-br from-[#eff6ff] to-[#e0e7ff]"
+      class="flex-1 overflow-hidden w-full flex gap-6"
+      style="background: #eff6ff; background: -webkit-linear-gradient(135deg, #eff6ff, #e0e7ff); background: -moz-linear-gradient(135deg, #eff6ff, #e0e7ff); background: linear-gradient(135deg, #eff6ff, #e0e7ff);"
       ref="mainWrapperEl"
     >
       <div
@@ -50,7 +52,8 @@
 
         <!-- 讲台 -->
         <div
-          class="mb-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] bg-gradient-to-r from-[#00c950] to-[#00bc7d] text-white text-center text-base leading-6"
+          class="mb-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] text-white text-center text-base leading-6"
+          style="background: #00c950; background: -webkit-linear-gradient(left, #00c950, #00bc7d); background: -moz-linear-gradient(left, #00c950, #00bc7d); background: linear-gradient(to right, #00c950, #00bc7d);"
         >
           讲 台
         </div>
@@ -60,7 +63,7 @@
           <div
             v-for="gIndex in cols / 2"
             :key="gIndex"
-            class="text-center py-3 border-none rounded-xl bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)] transition-all duration-300 ease hover:-translate-y-[3px] hover:shadow-[0_6px_15px_rgba(108,92,231,0.3)]"
+            class="group-item text-center py-3 border-none rounded-xl text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)]"
           >
             {{ `第${numberToChinese(gIndex)}组` }}
           </div>
@@ -74,19 +77,19 @@
           <div
             v-for="(seat, index) in seats"
             :key="index"
-            class="w-full h-[120px] rounded-[10px] border-2 flex items-center justify-center relative transition-all duration-300 ease"
+            class="seat-item w-full h-[120px] rounded-[10px] border-2 flex items-center justify-center relative"
             :class="[
               seat.studentId
-                ? 'border-[#a3b3ff] bg-gradient-to-br from-[#eef2ff] to-[#faf5ff]'
+                ? 'border-[#a3b3ff]'
                 : 'border-dashed border-[#d1d5dc] bg-[#f9fafb]',
-              'hover:border-solid hover:scale-[1.03]',
             ]"
+            :style="seat.studentId ? 'background: #eef2ff; background: -webkit-linear-gradient(135deg, #eef2ff, #faf5ff); background: -moz-linear-gradient(135deg, #eef2ff, #faf5ff); background: linear-gradient(135deg, #eef2ff, #faf5ff);' : ''"
             @dragover.prevent
             @drop="onDrop($event, index)"
           >
             <div
               v-if="seat.studentId"
-              class="w-full h-full flex flex-col items-center justify-center text-[#101828] text-xl leading-5 cursor-move relative group"
+              class="seat-content w-full h-full flex flex-col items-center justify-center text-[#101828] text-xl leading-5 cursor-move relative"
               draggable="true"
               @dragstart="onDragStart($event, index)"
             >
@@ -98,7 +101,7 @@
               </div>
               <img
                 src="../assets/images/delete.svg"
-                class="absolute hidden object-contain w-8 h-8 cursor-pointer group-hover:block right-2 top-2"
+                class="delete-icon absolute object-contain w-8 h-8 cursor-pointer right-2 top-2"
                 @click="handleUnSeat(seat)"
               />
             </div>
@@ -454,3 +457,61 @@ const filteredUnSeatedStudentList = computed(() => {
   )
 })
 </script>
+
+<style scoped>
+/* 分组标签 hover 效果 */
+.group-item {
+  background: #a29bfe;
+  background: -webkit-linear-gradient(135deg, #a29bfe, #6c5ce7);
+  background: -moz-linear-gradient(135deg, #a29bfe, #6c5ce7);
+  background: linear-gradient(135deg, #a29bfe, #6c5ce7);
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.group-item:hover {
+  -webkit-transform: translateY(-3px);
+  -moz-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  -o-transform: translateY(-3px);
+  transform: translateY(-3px);
+  -webkit-box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+  -moz-box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+  box-shadow: 0 6px 15px rgba(108, 92, 231, 0.3);
+}
+
+/* 座位格子 hover 效果 */
+.seat-item {
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.seat-item:hover {
+  border-style: solid !important;
+  -webkit-transform: scale(1.03);
+  -moz-transform: scale(1.03);
+  -ms-transform: scale(1.03);
+  -o-transform: scale(1.03);
+  transform: scale(1.03);
+}
+
+/* 删除图标默认隐藏 */
+.delete-icon {
+  display: none;
+  opacity: 0;
+  -webkit-transition: opacity 0.2s ease;
+  -moz-transition: opacity 0.2s ease;
+  -o-transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
+}
+
+/* 座位内容 hover 时显示删除图标 */
+.seat-content:hover .delete-icon {
+  display: block;
+  opacity: 1;
+}
+</style>
