@@ -6,7 +6,12 @@
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
       "Bash(curl:*)",
-      "Bash(timeout 3 tail:*)"
+      "Bash(timeout 3 tail:*)",
+      "Bash(find:*)",
+      "Bash(timeout 3 cmd:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)"
     ]
   }
 }

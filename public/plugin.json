@@ -1,6 +1,7 @@
 {
   "logo": "logo.png",
   "main": "index.html",
+  "preload": "preload/services.js",
   "features": [
     {
       "code": "seatTable",
