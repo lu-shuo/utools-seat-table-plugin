@@ -21,7 +21,8 @@
             <div
               class="text-[#312c85] text-2xl leading-9 flex items-center classroom-name"
             >
-              {{ classInfo.className }}
+              <span v-if="classInfo.className">{{ classInfo.className }}</span>
+              <span v-else class="text-gray-400">请设置班级信息</span>
               <el-icon
                 :size="20"
                 class="ml-0.5 edit-icon cursor-pointer"
@@ -31,7 +32,7 @@
               </el-icon>
             </div>
             <div class="text-[#4a5565] text-base leading-6">
-              班主任：{{ classInfo.teacherName }}
+              班主任：{{ classInfo.teacherName || "未设置" }}
             </div>
           </div>
         </div>
@@ -165,15 +166,32 @@
           </el-button>
         </div>
 
-        <div class="flex items-center w-full gap-2 mb-6">
-          <el-input
-            v-model="searchKey"
-            placeholder="请输入学生姓名/学号"
-            clearable
-            :prefix-icon="Search"
-            style="height: 36px"
-          ></el-input>
+        <!-- 空状态提示 -->
+        <div
+          v-if="totalStudentCount === 0"
+          class="flex-1 flex flex-col items-center justify-center w-full"
+        >
+          <img
+            src="../assets/images/no-user.svg"
+            alt=""
+            class="object-contain w-16 h-16 mb-4 opacity-50"
+          />
+          <div class="text-[#9ca3af] text-base mb-2">暂无学生数据</div>
+          <el-button type="primary" size="small" @click="handleImportExcel">
+            导入Excel学生名单
+          </el-button>
         </div>
+
+        <template v-else>
+          <div class="flex items-center w-full gap-2 mb-6">
+            <el-input
+              v-model="searchKey"
+              placeholder="请输入学生姓名/学号"
+              clearable
+              :prefix-icon="Search"
+              style="height: 36px"
+            ></el-input>
+          </div>
 
         <div class="flex items-center flex-shrink-0 w-full gap-3 mb-6">
           <div
@@ -276,6 +294,7 @@
             </div>
           </div>
         </div>
+        </template>
       </div>
     </div>
 
@@ -289,15 +308,15 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, useTemplateRef } from "vue";
+import { ref, computed, watch, useTemplateRef, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { numberToChinese } from "@/utils";
-import { INITIAL_SEATS } from "@/config";
 import type { Seat, Student } from "@/interface";
-import { STUDENT_LIST } from "@/config";
 import { Search, Upload, Edit } from "@element-plus/icons-vue";
 import { useFullscreen } from "@vueuse/core";
 import EditClassDialog from "./EditClassDialog.vue";
+import { dbGet, dbPut, DB_KEYS } from "@/utils/db";
+import { needsMigration, migrateFromLocalStorage } from "@/utils/migrate";
 
 // 班级信息
 interface ClassInfo {
@@ -306,29 +325,81 @@ interface ClassInfo {
 }
 
 const classInfo = ref<ClassInfo>({
-  className: "四八班教室座位安排",
-  teacherName: "杨玥辰",
+  className: "",
+  teacherName: "",
 });
 
 // 初始化班级信息
 const initClassInfo = () => {
-  const savedClassInfo = localStorage.getItem("classInfo");
+  const savedClassInfo = dbGet<ClassInfo>(DB_KEYS.CLASS_INFO);
   if (savedClassInfo) {
-    try {
-      classInfo.value = JSON.parse(savedClassInfo);
-    } catch (e) {
-      console.error("Failed to parse saved class info", e);
-    }
+    classInfo.value = savedClassInfo;
+  } else {
+    // 首次使用，显示引导提示
+    showFirstTimeGuide();
   }
 };
 
-// 保存班级信息到localStorage
+// 首次使用引导
+const showFirstTimeGuide = () => {
+  setTimeout(() => {
+    ElMessageBox.confirm(
+      "欢迎使用学生排座助手！请先设置班级信息和导入学生名单。",
+      "欢迎",
+      {
+        confirmButtonText: "设置班级信息",
+        cancelButtonText: "稍后设置",
+        type: "info",
+      }
+    )
+      .then(() => {
+        showEditClassDialog();
+      })
+      .catch(() => {
+        // 用户选择稍后设置
+      });
+  }, 500);
+};
+
+// 保存班级信息到 utools.db
 const saveClassInfo = () => {
-  localStorage.setItem("classInfo", JSON.stringify(classInfo.value));
+  dbPut(DB_KEYS.CLASS_INFO, classInfo.value);
 };
 
 // 初始化班级信息
 initClassInfo();
+
+// 组件挂载时检查数据迁移
+onMounted(() => {
+  if (needsMigration()) {
+    ElMessageBox.confirm(
+      "检测到旧版本数据，是否迁移到新版本？迁移后数据将更加安全可靠。",
+      "数据迁移",
+      {
+        confirmButtonText: "立即迁移",
+        cancelButtonText: "跳过",
+        type: "info",
+      }
+    )
+      .then(() => {
+        const result = migrateFromLocalStorage();
+        if (result.success) {
+          ElMessage.success(
+            `数据迁移成功！已迁移：${result.migratedKeys.join("、")}`
+          );
+          // 重新加载数据
+          initClassInfo();
+          initStudentList();
+          initSeats();
+        } else {
+          ElMessage.error(`数据迁移失败：${result.errors.join("；")}`);
+        }
+      })
+      .catch(() => {
+        // 用户选择跳过
+      });
+  }
+});
 
 // 编辑班级信息对话框
 const editClassDialogVisible = ref(false);
@@ -354,22 +425,15 @@ const studentList = ref<Student[]>([]);
 
 // 初始化学生列表
 const initStudentList = () => {
-  const savedStudents = localStorage.getItem("studentList");
+  const savedStudents = dbGet<Student[]>(DB_KEYS.STUDENT_LIST);
   if (savedStudents) {
-    try {
-      studentList.value = JSON.parse(savedStudents);
-      return;
-    } catch (e) {
-      console.error("Failed to parse saved student list", e);
-    }
+    studentList.value = savedStudents;
   }
-  // 使用默认学生列表
-  studentList.value = [...STUDENT_LIST];
 };
 
-// 保存学生列表到localStorage
+// 保存学生列表到 utools.db
 const saveStudentList = () => {
-  localStorage.setItem("studentList", JSON.stringify(studentList.value));
+  dbPut(DB_KEYS.STUDENT_LIST, studentList.value);
 };
 
 // 初始化学生列表
@@ -398,13 +462,9 @@ const handleUnSeat = (seat: Seat) => {
   }
 };
 
-// 添加保存到localStorage的函数
-const saveSeatsToLocalStorage = () => {
-  localStorage.setItem("seatData", JSON.stringify(seats.value));
-};
-
-const clearLocalStorage = () => {
-  localStorage.setItem("seatData", JSON.stringify(seats.value));
+// 保存座位数据到 utools.db
+const saveSeatsToDb = () => {
+  dbPut(DB_KEYS.SEAT_DATA, seats.value);
 };
 
 // 根据行列数计算总座位数
@@ -412,70 +472,71 @@ const totalSeats = computed(() => rows.value * cols.value);
 
 // 初始化座位数据
 const initSeats = () => {
-  // 尝试从localStorage加载数据
-  const savedSeats = localStorage.getItem("seatData");
-  if (savedSeats) {
-    try {
-      seats.value = JSON.parse(savedSeats);
-      return;
-    } catch (e) {
-      console.error("Failed to parse saved seat data", e);
-    }
+  // 尝试从 utools.db 加载数据
+  const savedSeats = dbGet<Seat[]>(DB_KEYS.SEAT_DATA);
+  if (savedSeats && savedSeats.length > 0) {
+    seats.value = savedSeats;
+    return;
   }
 
-  // 如果没有保存的数据，则按原有逻辑初始化
+  // 如果没有保存的数据，初始化空座位
   seats.value = Array(totalSeats.value)
     .fill(null)
     .map((_, index) => {
       const row = Math.floor(index / cols.value) + 1;
       const col = (index % cols.value) + 1;
 
-      const target = INITIAL_SEATS.find((seat) => seat.id === index + 1);
       return {
         id: index + 1,
-        studentId: target ? target.studentId : null,
-        studentName: target ? target.studentName : null,
-        row: target ? target.row : row,
-        col: target ? target.col : col,
+        studentId: null,
+        studentName: null,
+        row: row,
+        col: col,
       };
     });
 };
 
-// 监听座位数据变化并保存到localStorage
+// 监听座位数据变化并保存到 utools.db
 watch(
   seats,
   () => {
-    saveSeatsToLocalStorage();
+    saveSeatsToDb();
   },
   { deep: true },
 );
 
 // 监听行列变化，重新初始化座位
 watch([rows, cols], () => {
-  clearLocalStorage();
   initSeats();
+  saveSeatsToDb();
 });
 
 // 初始化座位
 initSeats();
 
 // 重置座位
-const resetSeats = () => {
-  seats.value = Array(totalSeats.value)
-    .fill(null)
-    .map((_, index) => {
-      const row = Math.floor(index / cols.value) + 1;
-      const col = (index % cols.value) + 1;
+const resetSeats = async () => {
+  try {
+    await ElMessageBox.confirm(
+      "重置座位将清空所有座位安排，是否继续？",
+      "提示",
+      {
+        confirmButtonText: "确认重置",
+        cancelButtonText: "取消",
+        type: "warning",
+      }
+    );
 
-      const target = INITIAL_SEATS.find((seat) => seat.id === index + 1);
-      return {
-        id: index + 1,
-        studentId: target ? target.studentId : null,
-        studentName: target ? target.studentName : null,
-        row: target ? target.row : row,
-        col: target ? target.col : col,
-      };
+    // 清空所有座位
+    seats.value.forEach((seat) => {
+      seat.studentId = null;
+      seat.studentName = null;
     });
+
+    ElMessage.success("座位已重置");
+  } catch {
+    // 用户取消
+  }
 };
 
 const mainWrapperEl = useTemplateRef("mainWrapperEl");
@@ -538,7 +599,7 @@ const onDrop = (event: DragEvent, targetIndex: number) => {
         console.error("Failed to parse student data", e);
       }
     }
-    // 数据变化会自动触发watch保存到localStorage
+    // 数据变化会自动触发watch保存到 utools.db
   }
 };
 

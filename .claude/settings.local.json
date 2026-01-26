@@ -12,7 +12,8 @@
       "Bash(powershell -Command:*)",
       "Bash(dir:*)",
       "Bash(ls:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:www.u-tools.cn)"
     ]
   }
 }
