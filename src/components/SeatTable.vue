@@ -18,10 +18,21 @@
             class="object-contain w-14 h-14"
           />
           <div class="flex flex-col">
-            <div class="text-[#312c85] text-2xl leading-9">
-              四八班教室座位安排
+            <div
+              class="text-[#312c85] text-2xl leading-9 flex items-center classroom-name"
+            >
+              {{ classInfo.className }}
+              <el-icon
+                :size="20"
+                class="ml-0.5 edit-icon cursor-pointer"
+                @click="showEditClassDialog"
+              >
+                <Edit />
+              </el-icon>
             </div>
-            <div class="text-[#4a5565] text-base leading-6">班主任：杨玥辰</div>
+            <div class="text-[#4a5565] text-base leading-6">
+              班主任：{{ classInfo.teacherName }}
+            </div>
           </div>
         </div>
         <div class="flex items-center gap-4">
@@ -267,6 +278,13 @@
         </div>
       </div>
     </div>
+
+    <!-- 编辑班级信息对话框 -->
+    <EditClassDialog
+      v-model="editClassDialogVisible"
+      :class-info="classInfo"
+      @confirm="handleSaveClassInfo"
+    />
   </div>
 </template>
 
@@ -277,8 +295,55 @@ import { numberToChinese } from "@/utils";
 import { INITIAL_SEATS } from "@/config";
 import type { Seat, Student } from "@/interface";
 import { STUDENT_LIST } from "@/config";
-import { Search, Upload } from "@element-plus/icons-vue";
+import { Search, Upload, Edit } from "@element-plus/icons-vue";
 import { useFullscreen } from "@vueuse/core";
+import EditClassDialog from "./EditClassDialog.vue";
+
+// 班级信息
+interface ClassInfo {
+  className: string;
+  teacherName: string;
+}
+
+const classInfo = ref<ClassInfo>({
+  className: "四八班教室座位安排",
+  teacherName: "杨玥辰",
+});
+
+// 初始化班级信息
+const initClassInfo = () => {
+  const savedClassInfo = localStorage.getItem("classInfo");
+  if (savedClassInfo) {
+    try {
+      classInfo.value = JSON.parse(savedClassInfo);
+    } catch (e) {
+      console.error("Failed to parse saved class info", e);
+    }
+  }
+};
+
+// 保存班级信息到localStorage
+const saveClassInfo = () => {
+  localStorage.setItem("classInfo", JSON.stringify(classInfo.value));
+};
+
+// 初始化班级信息
+initClassInfo();
+
+// 编辑班级信息对话框
+const editClassDialogVisible = ref(false);
+
+// 显示编辑对话框
+const showEditClassDialog = () => {
+  editClassDialogVisible.value = true;
+};
+
+// 保存班级信息（从子组件接收已验证的数据）
+const handleSaveClassInfo = (data: ClassInfo) => {
+  classInfo.value = { ...data };
+  saveClassInfo();
+  ElMessage.success("班级信息已更新");
+};
 
 // 行列配置
 const rows = ref(6);
@@ -702,5 +767,11 @@ const randomAssignSeats = () => {
 .seat-content:hover .delete-icon {
   display: block;
   opacity: 1;
+}
+
+.classroom-name {
+  .edit-icon:hover {
+    color: var(--el-color-primary);
+  }
 }
 </style>

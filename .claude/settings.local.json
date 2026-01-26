@@ -11,7 +11,8 @@
       "Bash(timeout 3 cmd:*)",
       "Bash(powershell -Command:*)",
       "Bash(dir:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cat:*)"
     ]
   }
 }
