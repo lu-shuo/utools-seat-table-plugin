@@ -308,7 +308,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, useTemplateRef, onMounted } from "vue";
+import { ref, computed, watch, useTemplateRef, onMounted, toRaw } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { numberToChinese } from "@/utils";
 import type { Seat, Student } from "@/interface";
@@ -363,7 +363,7 @@ const showFirstTimeGuide = () => {
 
 // 保存班级信息到 utools.db
 const saveClassInfo = () => {
-  dbPut(DB_KEYS.CLASS_INFO, classInfo.value);
+  dbPut(DB_KEYS.CLASS_INFO, toRaw(classInfo.value));
 };
 
 // 初始化班级信息
@@ -433,7 +433,7 @@ const initStudentList = () => {
 
 // 保存学生列表到 utools.db
 const saveStudentList = () => {
-  dbPut(DB_KEYS.STUDENT_LIST, studentList.value);
+  dbPut(DB_KEYS.STUDENT_LIST, toRaw(studentList.value));
 };
 
 // 初始化学生列表
@@ -464,7 +464,7 @@ const handleUnSeat = (seat: Seat) => {
 
 // 保存座位数据到 utools.db
 const saveSeatsToDb = () => {
-  dbPut(DB_KEYS.SEAT_DATA, seats.value);
+  dbPut(DB_KEYS.SEAT_DATA, toRaw(seats.value));
 };
 
 // 根据行列数计算总座位数
