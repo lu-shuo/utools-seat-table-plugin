@@ -12,6 +12,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.2",
     "element-plus": "^2.13.1",
+    "html-to-image": "^1.11.13",
     "sass": "^1.97.3",
     "unplugin-auto-import": "^21.0.0",
     "unplugin-vue-components": "^31.0.0",

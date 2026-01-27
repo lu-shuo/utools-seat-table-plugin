@@ -9,6 +9,7 @@
     "
   >
     <div
+      ref="classInfoEl"
       class="flex-shrink-0 p-6 flex flex-col items-start gap-6 self-stretch rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
     >
       <div class="flex items-center justify-between w-full">
@@ -46,6 +47,14 @@
               学生总数: {{ totalStudentCount }}
             </div>
           </div>
+          <el-button
+            type="success"
+            :icon="Camera"
+            @click="handleSaveSnapshot"
+            :loading="snapshotLoading"
+          >
+            保存快照
+          </el-button>
           <el-button type="primary" @click="resetSeats">重置座位</el-button>
         </div>
       </div>
@@ -61,6 +70,7 @@
       ref="mainWrapperEl"
     >
       <div
+        ref="seatTableEl"
         class="flex-1 overflow-y-auto p-6 box-border flex flex-col items-start rounded-[10px] bg-white shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1),0_4px_6px_-4px_rgba(0,0,0,0.1)]"
       >
         <div
@@ -312,11 +322,12 @@ import { ref, computed, watch, useTemplateRef, onMounted, toRaw } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { numberToChinese } from "@/utils";
 import type { Seat, Student } from "@/interface";
-import { Search, Upload, Edit } from "@element-plus/icons-vue";
+import { Search, Upload, Edit, Camera } from "@element-plus/icons-vue";
 import { useFullscreen } from "@vueuse/core";
 import EditClassDialog from "./EditClassDialog.vue";
 import { dbGet, dbPut, DB_KEYS } from "@/utils/db";
 import { needsMigration, migrateFromLocalStorage } from "@/utils/migrate";
+import * as htmlToImage from 'html-to-image';
 
 // 班级信息
 interface ClassInfo {
@@ -770,6 +781,173 @@ const randomAssignSeats = () => {
   }
 
   ElMessage.success(`已为 ${assignCount} 名学生随机分配座位`);
+};
+
+// 快照功能相关
+const snapshotLoading = ref(false);
+const classInfoEl = useTemplateRef("classInfoEl");
+const seatTableEl = useTemplateRef("seatTableEl");
+
+/**
+ * 保存座位表快照
+ */
+const handleSaveSnapshot = async () => {
+  // 边界检查：班级信息
+  if (!classInfo.value.className) {
+    try {
+      await ElMessageBox.confirm(
+        '班级信息未设置，快照中将显示"未设置班级"。是否继续？',
+        "提示",
+        {
+          confirmButtonText: "继续保存",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      );
+    } catch {
+      return; // 用户取消
+    }
+  }
+
+  // 边界检查：学生数据
+  if (totalStudentCount.value === 0) {
+    ElMessage.warning("当前没有学生数据，无法生成快照");
+    return;
+  }
+
+  // 边界检查：座位安排
+  if (seatedStudentCount.value === 0) {
+    try {
+      await ElMessageBox.confirm(
+        "当前没有学生就座，快照将显示空座位表。是否继续？",
+        "提示",
+        {
+          confirmButtonText: "继续保存",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      );
+    } catch {
+      return; // 用户取消
+    }
+  }
+
+  snapshotLoading.value = true;
+
+  try {
+    // 检查 DOM 元素是否存在
+    if (!classInfoEl.value || !seatTableEl.value) {
+      throw new Error("无法获取座位表元素");
+    }
+
+    // 创建临时容器用于截图
+    const tempContainer = document.createElement("div");
+    tempContainer.style.position = "fixed";
+    tempContainer.style.left = "-9999px";
+    tempContainer.style.top = "0";
+    tempContainer.style.width = "1200px"; // 固定宽度，确保截图清晰
+    tempContainer.style.background = "linear-gradient(135deg, #eff6ff, #e0e7ff)";
+    tempContainer.style.padding = "24px";
+    tempContainer.style.boxSizing = "border-box";
+    document.body.appendChild(tempContainer);
+
+    // 克隆班级信息栏
+    const classInfoClone = classInfoEl.value.cloneNode(true) as HTMLElement;
+    // 移除操作按钮（保存快照、重置座位按钮）
+    const buttonsContainer = classInfoClone.querySelector('.flex.items-center.gap-4');
+    if (buttonsContainer) {
+      const buttons = buttonsContainer.querySelectorAll('button');
+      buttons.forEach(btn => btn.remove());
+    }
+    tempContainer.appendChild(classInfoClone);
+
+    // 添加间距
+    const spacer = document.createElement("div");
+    spacer.style.height = "24px";
+    tempContainer.appendChild(spacer);
+
+    // 克隆座位表区域
+    const seatTableClone = seatTableEl.value.cloneNode(true) as HTMLElement;
+    // 移除"全屏排位"按钮
+    const fullscreenBtn = seatTableClone.querySelector('button');
+    if (fullscreenBtn) {
+      fullscreenBtn.remove();
+    }
+    // 移除滚动条样式
+    seatTableClone.style.overflow = "visible";
+    seatTableClone.style.maxHeight = "none";
+    tempContainer.appendChild(seatTableClone);
+
+    // 等待一帧，确保 DOM 渲染完成
+    await new Promise(resolve => requestAnimationFrame(resolve));
+
+    // 生成截图
+    const dataUrl = await htmlToImage.toPng(tempContainer, {
+      quality: 1.0,
+      pixelRatio: 2, // 提高清晰度
+      cacheBust: true, // 避免缓存问题
+      backgroundColor: '#eff6ff', // 设置背景色
+    });
+
+    // 移除临时容器
+    document.body.removeChild(tempContainer);
+
+    // 保存图片
+    if (!window.services || !window.services.writeImageFile) {
+      throw new Error("文件保存功能不可用");
+    }
+
+    const filePath = window.services.writeImageFile(dataUrl);
+
+    if (!filePath) {
+      throw new Error("文件保存失败");
+    }
+
+    // 成功提示
+    ElMessage.success({
+      message: "座位表快照已保存",
+      duration: 5000,
+      showClose: true,
+    });
+
+    // 系统通知
+    if (window.utools && window.utools.showNotification) {
+      window.utools.showNotification({
+        title: "座位表快照已保存",
+        body: `文件路径：${filePath}`,
+      });
+    }
+
+    // 询问是否打开文件位置
+    try {
+      await ElMessageBox.confirm(
+        `快照已保存到：\n${filePath}\n\n是否打开文件所在位置？`,
+        "保存成功",
+        {
+          confirmButtonText: "打开位置",
+          cancelButtonText: "关闭",
+          type: "success",
+        }
+      );
+
+      // 打开文件所在位置
+      if (window.utools && window.utools.shellShowItemInFolder) {
+        window.utools.shellShowItemInFolder(filePath);
+      }
+    } catch {
+      // 用户选择关闭
+    }
+
+  } catch (error) {
+    console.error("保存快照失败:", error);
+    ElMessage.error({
+      message: `保存快照失败：${error instanceof Error ? error.message : "未知错误"}`,
+      duration: 5000,
+      showClose: true,
+    });
+  } finally {
+    snapshotLoading.value = false;
+  }
 };
 </script>
 

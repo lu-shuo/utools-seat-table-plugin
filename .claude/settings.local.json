@@ -13,7 +13,12 @@
       "Bash(dir:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
-      "WebFetch(domain:www.u-tools.cn)"
+      "WebFetch(domain:www.u-tools.cn)",
+      "Bash(xargs:*)",
+      "Bash(npm view:*)",
+      "Bash(npm info:*)",
+      "Bash(npm search:*)",
+      "WebFetch(domain:element-plus.org)"
     ]
   }
 }
