@@ -22,6 +22,16 @@ window.services = {
     fs.writeFileSync(filePath, base64Url.substring(matchs[0].length), { encoding: 'base64' })
     return filePath
   },
+  // 图片写入到下载目录（支持自定义文件名）
+  writeImageFileWithName (base64Url, fileName) {
+    const matchs = /^data:image\/([a-z]{1,20});base64,/i.exec(base64Url)
+    if (!matchs) return
+    // 确保文件名安全（移除非法字符）
+    const safeName = fileName.replace(/[<>:"/\\|?*]/g, '_')
+    const filePath = path.join(window.utools.getPath('downloads'), safeName)
+    fs.writeFileSync(filePath, base64Url.substring(matchs[0].length), { encoding: 'base64' })
+    return filePath
+  },
   // 读取 Excel 文件并解析学生数据
   readExcelFile (filePath) {
     try {

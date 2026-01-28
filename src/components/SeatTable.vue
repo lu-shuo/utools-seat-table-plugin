@@ -840,64 +840,71 @@ const handleSaveSnapshot = async () => {
       throw new Error("无法获取座位表元素");
     }
 
-    // 创建临时容器用于截图
-    const tempContainer = document.createElement("div");
-    tempContainer.style.position = "fixed";
-    tempContainer.style.left = "-9999px";
-    tempContainer.style.top = "0";
-    tempContainer.style.width = "1200px"; // 固定宽度，确保截图清晰
-    tempContainer.style.background = "linear-gradient(135deg, #eff6ff, #e0e7ff)";
-    tempContainer.style.padding = "24px";
-    tempContainer.style.boxSizing = "border-box";
-    document.body.appendChild(tempContainer);
+    // 临时隐藏操作按钮
+    const buttonsContainer = classInfoEl.value.querySelector('.flex.items-center.gap-4') as HTMLElement;
+    const fullscreenBtn = seatTableEl.value.querySelector('button') as HTMLElement;
 
-    // 克隆班级信息栏
+    const originalButtonsDisplay = buttonsContainer ? buttonsContainer.style.display : '';
+    const originalFullscreenDisplay = fullscreenBtn ? fullscreenBtn.style.display : '';
+
+    if (buttonsContainer) buttonsContainer.style.display = 'none';
+    if (fullscreenBtn) fullscreenBtn.style.display = 'none';
+
+    // 等待 DOM 更新
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // 创建包装容器
+    const wrapper = document.createElement('div');
+    wrapper.style.position = 'fixed';
+    wrapper.style.left = '0';
+    wrapper.style.top = '0';
+    wrapper.style.zIndex = '-9999';
+    wrapper.style.width = '1200px';
+    wrapper.style.padding = '24px';
+    wrapper.style.background = 'linear-gradient(135deg, #eff6ff, #e0e7ff)';
+    wrapper.style.boxSizing = 'border-box';
+    document.body.appendChild(wrapper);
+
+    // 克隆元素到包装容器
     const classInfoClone = classInfoEl.value.cloneNode(true) as HTMLElement;
-    // 移除操作按钮（保存快照、重置座位按钮）
-    const buttonsContainer = classInfoClone.querySelector('.flex.items-center.gap-4');
-    if (buttonsContainer) {
-      const buttons = buttonsContainer.querySelectorAll('button');
-      buttons.forEach(btn => btn.remove());
-    }
-    tempContainer.appendChild(classInfoClone);
+    classInfoClone.style.marginBottom = '24px';
+    wrapper.appendChild(classInfoClone);
 
-    // 添加间距
-    const spacer = document.createElement("div");
-    spacer.style.height = "24px";
-    tempContainer.appendChild(spacer);
-
-    // 克隆座位表区域
     const seatTableClone = seatTableEl.value.cloneNode(true) as HTMLElement;
-    // 移除"全屏排位"按钮
-    const fullscreenBtn = seatTableClone.querySelector('button');
-    if (fullscreenBtn) {
-      fullscreenBtn.remove();
-    }
-    // 移除滚动条样式
-    seatTableClone.style.overflow = "visible";
-    seatTableClone.style.maxHeight = "none";
-    tempContainer.appendChild(seatTableClone);
+    seatTableClone.style.overflow = 'visible';
+    seatTableClone.style.maxHeight = 'none';
+    wrapper.appendChild(seatTableClone);
 
-    // 等待一帧，确保 DOM 渲染完成
-    await new Promise(resolve => requestAnimationFrame(resolve));
+    // 等待渲染
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     // 生成截图
-    const dataUrl = await htmlToImage.toPng(tempContainer, {
+    const dataUrl = await htmlToImage.toPng(wrapper, {
       quality: 1.0,
-      pixelRatio: 2, // 提高清晰度
-      cacheBust: true, // 避免缓存问题
-      backgroundColor: '#eff6ff', // 设置背景色
+      pixelRatio: 2,
+      cacheBust: true,
+      backgroundColor: '#eff6ff',
+      style: {
+        transform: 'scale(1)',
+        transformOrigin: 'top left'
+      }
     });
 
-    // 移除临时容器
-    document.body.removeChild(tempContainer);
+    // 清理
+    document.body.removeChild(wrapper);
+    if (buttonsContainer) buttonsContainer.style.display = originalButtonsDisplay;
+    if (fullscreenBtn) fullscreenBtn.style.display = originalFullscreenDisplay;
 
     // 保存图片
-    if (!window.services || !window.services.writeImageFile) {
+    if (!window.services || !window.services.writeImageFileWithName) {
       throw new Error("文件保存功能不可用");
     }
 
-    const filePath = window.services.writeImageFile(dataUrl);
+    // 生成文件名：{班级名}座位图.png
+    const className = classInfo.value.className || '未设置班级';
+    const fileName = `${className}座位图.png`;
+
+    const filePath = window.services.writeImageFileWithName(dataUrl, fileName);
 
     if (!filePath) {
       throw new Error("文件保存失败");
