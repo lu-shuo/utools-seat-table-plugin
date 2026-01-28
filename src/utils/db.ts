@@ -7,6 +7,7 @@ export const DB_KEYS = {
   CLASS_INFO: "class_info",
   STUDENT_LIST: "student_list",
   SEAT_DATA: "seat_data",
+  TOUR_COMPLETED: "tour_completed",
 };
 
 /**

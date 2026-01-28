@@ -20,6 +20,7 @@
           />
           <div class="flex flex-col">
             <div
+              ref="classNameRef"
               class="text-[#312c85] text-2xl leading-9 flex items-center classroom-name"
             >
               <span v-if="classInfo.className">{{ classInfo.className }}</span>
@@ -48,6 +49,7 @@
             </div>
           </div>
           <el-button
+            ref="snapshotBtnRef"
             type="success"
             :icon="Camera"
             @click="handleSaveSnapshot"
@@ -55,7 +57,12 @@
           >
             保存快照
           </el-button>
-          <el-button type="primary" class="ml-0" @click="resetSeats">
+          <el-button
+            ref="resetBtnRef"
+            type="primary"
+            class="ml-0"
+            @click="resetSeats"
+          >
             重置座位
           </el-button>
         </div>
@@ -169,6 +176,7 @@
         >
           <span>学生列表</span>
           <el-button
+            ref="importBtnRef"
             type="primary"
             text
             :icon="Upload"
@@ -316,6 +324,35 @@
       :class-info="classInfo"
       @confirm="handleSaveClassInfo"
     />
+
+    <!-- 漫游式引导 -->
+    <el-tour v-model="tourOpen" :mask="{ color: 'rgba(0, 0, 0, 0.5)' }">
+      <el-tour-step
+        :target="classNameRef?.$el || classNameRef"
+        title="设置班级信息"
+        description="点击这里可以编辑班级名称和班主任姓名，方便管理和识别。"
+      />
+      <el-tour-step
+        :target="importBtnRef?.$el || importBtnRef"
+        title="导入学生数据"
+        description="点击这里可以从Excel导入学生名单。首次使用可以下载模板，填写学号和姓名后导入。"
+      />
+      <el-tour-step
+        :target="seatTableEl"
+        title="座位表区域"
+        description="这里是座位表展示区域。你可以拖拽学生到座位上，或者使用随机排座功能快速分配座位。"
+      />
+      <el-tour-step
+        :target="snapshotBtnRef?.$el || snapshotBtnRef"
+        title="保存快照"
+        description="点击这里可以将座位表保存为图片，方便分享给家长或打印使用。"
+      />
+      <el-tour-step
+        :target="resetBtnRef?.$el || resetBtnRef"
+        title="重置座位"
+        description="点击这里可以清空所有座位安排，重新开始排座。"
+      />
+    </el-tour>
   </div>
 </template>
 
@@ -347,13 +384,36 @@ const initClassInfo = () => {
   const savedClassInfo = dbGet<ClassInfo>(DB_KEYS.CLASS_INFO);
   if (savedClassInfo) {
     classInfo.value = savedClassInfo;
-  } else {
-    // 首次使用，显示引导提示
-    showFirstTimeGuide();
   }
 };
 
-// 首次使用引导
+// 漫游式引导相关
+const tourOpen = ref(false);
+const classNameRef = useTemplateRef("classNameRef");
+const importBtnRef = useTemplateRef("importBtnRef");
+const snapshotBtnRef = useTemplateRef("snapshotBtnRef");
+const resetBtnRef = useTemplateRef("resetBtnRef");
+
+// 检查是否需要显示引导
+const checkAndShowTour = () => {
+  const tourCompleted = dbGet<boolean>(DB_KEYS.TOUR_COMPLETED);
+  if (!tourCompleted) {
+    // 延迟显示，确保 DOM 已渲染
+    setTimeout(() => {
+      tourOpen.value = true;
+    }, 500);
+  }
+};
+
+// 监听引导关闭，保存完成状态
+watch(tourOpen, (newVal) => {
+  if (!newVal) {
+    // 引导关闭时，标记为已完成
+    dbPut(DB_KEYS.TOUR_COMPLETED, true);
+  }
+});
+
+// 首次使用引导（保留原有逻辑，但不再自动触发）
 const showFirstTimeGuide = () => {
   setTimeout(() => {
     ElMessageBox.confirm(
@@ -546,6 +606,7 @@ const resetSeats = async () => {
       seat.studentName = null;
     });
 
+    activeStudentStatus.value = "unSeated";
     ElMessage.success("座位已重置");
   } catch {
     // 用户取消
@@ -1025,6 +1086,11 @@ const handleSaveSnapshot = async () => {
     snapshotLoading.value = false;
   }
 };
+
+// 组件挂载时检查是否需要显示引导
+onMounted(() => {
+  checkAndShowTour();
+});
 </script>
 
 <style scoped>
