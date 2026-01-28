@@ -654,6 +654,63 @@ const handleImportExcel = async () => {
     return;
   }
 
+  // 首先提示用户可以下载模板
+  try {
+    await ElMessageBox.confirm(
+      '请确保您的Excel文件包含"学号"和"姓名"两列数据。\n\n如果您还没有准备好Excel文件，可以先下载导入模板进行填写。（您的数据将加密保存在本地，不会上传至任何服务器，请放心使用）',
+      "导入学生数据",
+      {
+        confirmButtonText: "下载模板",
+        cancelButtonText: "直接导入",
+        distinguishCancelAndClose: true,
+        type: "info",
+      },
+    );
+
+    // 用户选择下载模板
+    if (!window.services || !window.services.copyTemplateToDownloads) {
+      ElMessage.error("模板下载功能不可用");
+      return;
+    }
+
+    const result = window.services.copyTemplateToDownloads();
+
+    if (!result.success) {
+      ElMessage.error(`模板下载失败: ${result.error}`);
+      return;
+    }
+
+    // 下载成功，询问是否打开文件位置
+    try {
+      await ElMessageBox.confirm(
+        `模板已保存到：\n${result.filePath}\n\n请填写学生数据后，再次点击"从Excel导入"按钮上传。\n\n是否打开文件所在位置？`,
+        "模板下载成功",
+        {
+          confirmButtonText: "打开位置",
+          cancelButtonText: "关闭",
+          type: "success",
+        },
+      );
+
+      // 打开文件所在位置
+      if (window.utools && window.utools.shellShowItemInFolder) {
+        window.utools.shellShowItemInFolder(result.filePath);
+      }
+    } catch {
+      // 用户选择关闭
+    }
+
+    return; // 下载模板后结束，等待用户填写后再次导入
+  } catch (action) {
+    // 用户选择直接导入或关闭对话框
+    if (action === "cancel") {
+      // 用户选择直接导入，继续执行导入流程
+    } else {
+      // 用户关闭对话框
+      return;
+    }
+  }
+
   // 检查是否已有座位安排
   const hasSeatedStudents = seats.value.some((seat) => seat.studentId);
 
@@ -728,8 +785,10 @@ const handleImportExcel = async () => {
       activeStudentStatus.value = "unSeated";
     }
   } catch (error) {
-    console.error("Import error:", error);
-    ElMessage.error("导入失败，请检查文件格式");
+    console.error("导入Excel失败:", error);
+    ElMessage.error(
+      `导入失败: ${error instanceof Error ? error.message : "未知错误"}`,
+    );
   }
 };
 

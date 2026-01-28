@@ -72,5 +72,26 @@ window.services = {
         error: error.message
       }
     }
+  },
+  // 复制导入模板到下载目录
+  copyTemplateToDownloads () {
+    try {
+      const templatePath = path.join(__dirname, '..', '学生数据导入模板.xlsx')
+      const downloadsPath = window.utools.getPath('downloads')
+      const targetPath = path.join(downloadsPath, '学生数据导入模板.xlsx')
+
+      // 复制文件
+      fs.copyFileSync(templatePath, targetPath)
+
+      return {
+        success: true,
+        filePath: targetPath
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message
+      }
+    }
   }
 }
