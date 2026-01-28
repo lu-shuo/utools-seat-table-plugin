@@ -55,7 +55,9 @@
           >
             保存快照
           </el-button>
-          <el-button type="primary" @click="resetSeats">重置座位</el-button>
+          <el-button type="primary" class="ml-0" @click="resetSeats">
+            重置座位
+          </el-button>
         </div>
       </div>
     </div>
@@ -168,11 +170,11 @@
           <span>学生列表</span>
           <el-button
             type="primary"
-            size="small"
+            text
             :icon="Upload"
             @click="handleImportExcel"
           >
-            导入Excel
+            从Excel导入
           </el-button>
         </div>
 
@@ -203,107 +205,107 @@
             ></el-input>
           </div>
 
-        <div class="flex items-center flex-shrink-0 w-full gap-3 mb-6">
-          <div
-            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#f0fdf4]"
-            :class="
-              activeStudentStatus === 'seated'
-                ? 'border-[#00a63e]'
-                : 'border-[#b9f8cf]'
-            "
-            @click="activeStudentStatus = 'seated'"
-          >
-            <div class="text-[#0d542b] text-base leading-6 mb-1">已就座</div>
-            <div class="text-[#00a63e] text-base leading-6">
-              {{ seatedStudentCount }}人
-            </div>
-          </div>
-          <div
-            class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#fff7ed]"
-            :class="
-              activeStudentStatus === 'unSeated'
-                ? 'border-[#f54900]'
-                : 'border-[#ffd6a7]'
-            "
-            @click="activeStudentStatus = 'unSeated'"
-          >
-            <div class="text-[#7e2a0c] text-base leading-6 mb-1">未就座</div>
-            <div class="text-[#f54900] text-base leading-6">
-              {{ totalStudentCount - seatedStudentCount }}人
-            </div>
-          </div>
-        </div>
-
-        <div
-          v-show="activeStudentStatus === 'seated'"
-          class="flex flex-col flex-1 w-full overflow-hidden"
-        >
-          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">
-            已分配座位
-          </div>
-          <div class="flex flex-col flex-1 w-full gap-2 overflow-y-auto">
+          <div class="flex items-center flex-shrink-0 w-full gap-3 mb-6">
             <div
-              v-for="seat in filteredHasStudentSeatList"
-              :key="seat.studentId!"
-              class="w-full p-3 box-border flex rounded-[10px] border border-[#b9f8cf] bg-[#f0fdf4]"
+              class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#f0fdf4]"
+              :class="
+                activeStudentStatus === 'seated'
+                  ? 'border-[#00a63e]'
+                  : 'border-[#b9f8cf]'
+              "
+              @click="activeStudentStatus = 'seated'"
             >
-              <div class="flex items-center gap-2">
-                <div
-                  class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#00c950]"
-                >
-                  <img
-                    src="../assets/images/plain-user.svg"
-                    class="flex-shrink-0 object-contain w-4 h-4"
-                  />
-                </div>
-                <div>
-                  <div class="text-[#101828] text-base leading-6 mb-[2px]">
-                    {{ seat.studentName }}（学号：{{ seat.studentId }}）
+              <div class="text-[#0d542b] text-base leading-6 mb-1">已就座</div>
+              <div class="text-[#00a63e] text-base leading-6">
+                {{ seatedStudentCount }}人
+              </div>
+            </div>
+            <div
+              class="flex-1 h-[74px] p-3 box-border cursor-pointer rounded-[10px] border bg-[#fff7ed]"
+              :class="
+                activeStudentStatus === 'unSeated'
+                  ? 'border-[#f54900]'
+                  : 'border-[#ffd6a7]'
+              "
+              @click="activeStudentStatus = 'unSeated'"
+            >
+              <div class="text-[#7e2a0c] text-base leading-6 mb-1">未就座</div>
+              <div class="text-[#f54900] text-base leading-6">
+                {{ totalStudentCount - seatedStudentCount }}人
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-show="activeStudentStatus === 'seated'"
+            class="flex flex-col flex-1 w-full overflow-hidden"
+          >
+            <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">
+              已分配座位
+            </div>
+            <div class="flex flex-col flex-1 w-full gap-2 overflow-y-auto">
+              <div
+                v-for="seat in filteredHasStudentSeatList"
+                :key="seat.studentId!"
+                class="w-full p-3 box-border flex rounded-[10px] border border-[#b9f8cf] bg-[#f0fdf4]"
+              >
+                <div class="flex items-center gap-2">
+                  <div
+                    class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#00c950]"
+                  >
+                    <img
+                      src="../assets/images/plain-user.svg"
+                      class="flex-shrink-0 object-contain w-4 h-4"
+                    />
                   </div>
-                  <div class="text-[#4a5565] text-xs leading-4">
-                    座位号：{{ seat.id }}（第{{ seat.row }}排第{{
-                      seat.col
-                    }}个）
+                  <div>
+                    <div class="text-[#101828] text-base leading-6 mb-[2px]">
+                      {{ seat.studentName }}（学号：{{ seat.studentId }}）
+                    </div>
+                    <div class="text-[#4a5565] text-xs leading-4">
+                      座位号：{{ seat.id }}（第{{ seat.row }}排第{{
+                        seat.col
+                      }}个）
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div
-          v-show="activeStudentStatus === 'unSeated'"
-          class="flex flex-col flex-1 w-full overflow-hidden"
-        >
-          <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">
-            未分配座位
-          </div>
-          <div class="flex flex-col flex-1 w-full gap-2 overflow-y-auto">
-            <div
-              v-for="student in filteredUnSeatedStudentList"
-              :key="student.id"
-              class="w-full p-3 box-border flex rounded-[10px] border border-[#ffd6a7] bg-[#fff7ed] cursor-move"
-              draggable="true"
-              @dragstart="onStudentDragStart($event, student)"
-            >
-              <div class="flex items-center gap-2">
-                <div
-                  class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#f54900]"
-                >
-                  <img
-                    src="../assets/images/plain-user.svg"
-                    class="flex-shrink-0 object-contain w-4 h-4"
-                  />
-                </div>
-                <div>
-                  <div class="text-[#101828] text-base leading-6">
-                    {{ student.name }}（学号：{{ student.id }}）
+          <div
+            v-show="activeStudentStatus === 'unSeated'"
+            class="flex flex-col flex-1 w-full overflow-hidden"
+          >
+            <div class="flex-shrink-0 text-[#364153] text-base leading-6 mb-3">
+              未分配座位
+            </div>
+            <div class="flex flex-col flex-1 w-full gap-2 overflow-y-auto">
+              <div
+                v-for="student in filteredUnSeatedStudentList"
+                :key="student.id"
+                class="w-full p-3 box-border flex rounded-[10px] border border-[#ffd6a7] bg-[#fff7ed] cursor-move"
+                draggable="true"
+                @dragstart="onStudentDragStart($event, student)"
+              >
+                <div class="flex items-center gap-2">
+                  <div
+                    class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#f54900]"
+                  >
+                    <img
+                      src="../assets/images/plain-user.svg"
+                      class="flex-shrink-0 object-contain w-4 h-4"
+                    />
+                  </div>
+                  <div>
+                    <div class="text-[#101828] text-base leading-6">
+                      {{ student.name }}（学号：{{ student.id }}）
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
         </template>
       </div>
     </div>
@@ -327,7 +329,7 @@ import { useFullscreen } from "@vueuse/core";
 import EditClassDialog from "./EditClassDialog.vue";
 import { dbGet, dbPut, DB_KEYS } from "@/utils/db";
 import { needsMigration, migrateFromLocalStorage } from "@/utils/migrate";
-import * as htmlToImage from 'html-to-image';
+import * as htmlToImage from "html-to-image";
 
 // 班级信息
 interface ClassInfo {
@@ -361,7 +363,7 @@ const showFirstTimeGuide = () => {
         confirmButtonText: "设置班级信息",
         cancelButtonText: "稍后设置",
         type: "info",
-      }
+      },
     )
       .then(() => {
         showEditClassDialog();
@@ -390,13 +392,13 @@ onMounted(() => {
         confirmButtonText: "立即迁移",
         cancelButtonText: "跳过",
         type: "info",
-      }
+      },
     )
       .then(() => {
         const result = migrateFromLocalStorage();
         if (result.success) {
           ElMessage.success(
-            `数据迁移成功！已迁移：${result.migratedKeys.join("、")}`
+            `数据迁移成功！已迁移：${result.migratedKeys.join("、")}`,
           );
           // 重新加载数据
           initClassInfo();
@@ -535,7 +537,7 @@ const resetSeats = async () => {
         confirmButtonText: "确认重置",
         cancelButtonText: "取消",
         type: "warning",
-      }
+      },
     );
 
     // 清空所有座位
@@ -802,7 +804,7 @@ const handleSaveSnapshot = async () => {
           confirmButtonText: "继续保存",
           cancelButtonText: "取消",
           type: "warning",
-        }
+        },
       );
     } catch {
       return; // 用户取消
@@ -825,7 +827,7 @@ const handleSaveSnapshot = async () => {
           confirmButtonText: "继续保存",
           cancelButtonText: "取消",
           type: "warning",
-        }
+        },
       );
     } catch {
       return; // 用户取消
@@ -841,58 +843,67 @@ const handleSaveSnapshot = async () => {
     }
 
     // 临时隐藏操作按钮
-    const buttonsContainer = classInfoEl.value.querySelector('.flex.items-center.gap-4') as HTMLElement;
-    const fullscreenBtn = seatTableEl.value.querySelector('button') as HTMLElement;
+    const buttonsContainer = classInfoEl.value.querySelector(
+      ".flex.items-center.gap-4",
+    ) as HTMLElement;
+    const fullscreenBtn = seatTableEl.value.querySelector(
+      "button",
+    ) as HTMLElement;
 
-    const originalButtonsDisplay = buttonsContainer ? buttonsContainer.style.display : '';
-    const originalFullscreenDisplay = fullscreenBtn ? fullscreenBtn.style.display : '';
+    const originalButtonsDisplay = buttonsContainer
+      ? buttonsContainer.style.display
+      : "";
+    const originalFullscreenDisplay = fullscreenBtn
+      ? fullscreenBtn.style.display
+      : "";
 
-    if (buttonsContainer) buttonsContainer.style.display = 'none';
-    if (fullscreenBtn) fullscreenBtn.style.display = 'none';
+    if (buttonsContainer) buttonsContainer.style.display = "none";
+    if (fullscreenBtn) fullscreenBtn.style.display = "none";
 
     // 等待 DOM 更新
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // 创建包装容器
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'fixed';
-    wrapper.style.left = '0';
-    wrapper.style.top = '0';
-    wrapper.style.zIndex = '-9999';
-    wrapper.style.width = '1200px';
-    wrapper.style.padding = '24px';
-    wrapper.style.background = 'linear-gradient(135deg, #eff6ff, #e0e7ff)';
-    wrapper.style.boxSizing = 'border-box';
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "fixed";
+    wrapper.style.left = "0";
+    wrapper.style.top = "0";
+    wrapper.style.zIndex = "-9999";
+    wrapper.style.width = "1200px";
+    wrapper.style.padding = "24px";
+    wrapper.style.background = "linear-gradient(135deg, #eff6ff, #e0e7ff)";
+    wrapper.style.boxSizing = "border-box";
     document.body.appendChild(wrapper);
 
     // 克隆元素到包装容器
     const classInfoClone = classInfoEl.value.cloneNode(true) as HTMLElement;
-    classInfoClone.style.marginBottom = '24px';
+    classInfoClone.style.marginBottom = "24px";
     wrapper.appendChild(classInfoClone);
 
     const seatTableClone = seatTableEl.value.cloneNode(true) as HTMLElement;
-    seatTableClone.style.overflow = 'visible';
-    seatTableClone.style.maxHeight = 'none';
+    seatTableClone.style.overflow = "visible";
+    seatTableClone.style.maxHeight = "none";
     wrapper.appendChild(seatTableClone);
 
     // 等待渲染
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // 生成截图
     const dataUrl = await htmlToImage.toPng(wrapper, {
       quality: 1.0,
       pixelRatio: 2,
       cacheBust: true,
-      backgroundColor: '#eff6ff',
+      backgroundColor: "#eff6ff",
       style: {
-        transform: 'scale(1)',
-        transformOrigin: 'top left'
-      }
+        transform: "scale(1)",
+        transformOrigin: "top left",
+      },
     });
 
     // 清理
     document.body.removeChild(wrapper);
-    if (buttonsContainer) buttonsContainer.style.display = originalButtonsDisplay;
+    if (buttonsContainer)
+      buttonsContainer.style.display = originalButtonsDisplay;
     if (fullscreenBtn) fullscreenBtn.style.display = originalFullscreenDisplay;
 
     // 保存图片
@@ -901,7 +912,7 @@ const handleSaveSnapshot = async () => {
     }
 
     // 生成文件名：{班级名}座位图.png
-    const className = classInfo.value.className || '未设置班级';
+    const className = classInfo.value.className || "未设置班级";
     const fileName = `${className}座位图.png`;
 
     const filePath = window.services.writeImageFileWithName(dataUrl, fileName);
@@ -934,7 +945,7 @@ const handleSaveSnapshot = async () => {
           confirmButtonText: "打开位置",
           cancelButtonText: "关闭",
           type: "success",
-        }
+        },
       );
 
       // 打开文件所在位置
@@ -944,7 +955,6 @@ const handleSaveSnapshot = async () => {
     } catch {
       // 用户选择关闭
     }
-
   } catch (error) {
     console.error("保存快照失败:", error);
     ElMessage.error({
@@ -1019,5 +1029,10 @@ const handleSaveSnapshot = async () => {
   .edit-icon:hover {
     color: var(--el-color-primary);
   }
+}
+
+/* 重置按钮的 margin */
+.ml-0 {
+  margin-left: 0 !important;
 }
 </style>
