@@ -1263,11 +1263,27 @@ const handleSaveSnapshot = async () => {
     // 克隆元素到包装容器
     const classInfoClone = classInfoEl.value.cloneNode(true) as HTMLElement;
     classInfoClone.style.marginBottom = "24px";
+
+    // 移除行列数控制栏（第二个子元素）
+    const layoutConfigBar = classInfoClone.children[1] as HTMLElement;
+    if (layoutConfigBar) {
+      layoutConfigBar.remove();
+    }
+
     wrapper.appendChild(classInfoClone);
 
     const seatTableClone = seatTableEl.value.cloneNode(true) as HTMLElement;
     seatTableClone.style.overflow = "visible";
     seatTableClone.style.maxHeight = "none";
+
+    // 移除底部提示元素（查找包含"提示:"的元素）
+    const tipElements = seatTableClone.querySelectorAll('.flex.items-center.gap-6');
+    tipElements.forEach((el) => {
+      if (el.textContent?.includes('💡 提示:')) {
+        el.remove();
+      }
+    });
+
     wrapper.appendChild(seatTableClone);
 
     // 等待渲染
