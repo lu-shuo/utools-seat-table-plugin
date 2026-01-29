@@ -58,6 +58,14 @@
             保存快照
           </el-button>
           <el-button
+            ref="randomBtnRef"
+            type="warning"
+            class="ml-0"
+            @click="handleRandomAssignSeats"
+          >
+            随机排位
+          </el-button>
+          <el-button
             ref="resetBtnRef"
             type="primary"
             class="ml-0"
@@ -221,6 +229,13 @@
               />
             </div>
           </div>
+        </div>
+
+        <!-- 提示 -->
+        <div
+          class="flex items-center gap-6 w-full p-4 bg-[#EFF6FF] rounded-[10px] h-16.5 px-4 border-[#BEDBFF] border mt-6 text-[#1C398E] text-[14px] leading-5"
+        >
+          💡 提示: 拖拽右侧学生列表中的卡片到空座位，或点击顶部"随机排位"按钮
         </div>
       </div>
       <div
@@ -1108,6 +1123,51 @@ const randomAssignSeats = () => {
   }
 
   ElMessage.success(`已为 ${assignCount} 名学生随机分配座位`);
+};
+
+// 处理随机排位按钮点击
+const handleRandomAssignSeats = async () => {
+  // 检查是否有学生数据
+  if (totalStudentCount.value === 0) {
+    ElMessage.warning("请先导入学生名单");
+    return;
+  }
+
+  // 检查是否有未就座的学生
+  if (unSeatedStudentList.value.length === 0) {
+    ElMessage.info("所有学生已就座");
+    return;
+  }
+
+  // 检查是否有已就座的学生
+  const hasSeatedStudents = seats.value.some((seat) => seat.studentId);
+
+  if (hasSeatedStudents) {
+    try {
+      await ElMessageBox.confirm(
+        "随机排位将清空现有座位安排，是否继续？",
+        "提示",
+        {
+          confirmButtonText: "确认排位",
+          cancelButtonText: "取消",
+          type: "warning",
+        },
+      );
+
+      // 清空所有座位
+      seats.value.forEach((seat) => {
+        seat.studentId = null;
+        seat.studentName = null;
+      });
+    } catch {
+      // 用户取消
+      return;
+    }
+  }
+
+  // 执行随机排座
+  randomAssignSeats();
+  activeStudentStatus.value = "seated";
 };
 
 // 快照功能相关
