@@ -328,7 +328,7 @@
     <!-- 漫游式引导 -->
     <el-tour v-model="tourOpen" :mask="{ color: 'rgba(0, 0, 0, 0.5)' }">
       <el-tour-step
-        :target="classNameRef?.$el || classNameRef"
+        :target="classNameRef"
         title="设置班级信息"
         description="点击这里可以编辑班级名称和班主任姓名，方便管理和识别。"
       />
