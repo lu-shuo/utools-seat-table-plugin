@@ -76,6 +76,7 @@
         </div>
       </div>
       <div
+        ref="layoutConfigRef"
         class="flex items-center gap-6 w-full bg-[#F9FAFB] rounded-[10px] h-16.5 px-4"
       >
         <div class="text-[#364153] text-base leading-6">座位布局：</div>
@@ -408,9 +409,19 @@
         description="点击这里可以从Excel导入学生名单。首次使用可以下载模板，填写学号和姓名后导入。"
       />
       <el-tour-step
+        :target="layoutConfigRef"
+        title="自定义座位布局"
+        description="在这里可以自定义行数、列数，开启分组功能。修改行列数时会清空现有座位安排。"
+      />
+      <el-tour-step
+        :target="randomBtnRef?.$el || randomBtnRef"
+        title="随机排位"
+        description="点击这里可以一键随机分配所有未就座的学生到空座位上，快速完成排座。"
+      />
+      <el-tour-step
         :target="seatTableEl"
         title="座位表区域"
-        description="这里是座位表展示区域。你可以拖拽学生到座位上，或者使用随机排座功能快速分配座位。"
+        description="这里是座位表展示区域。你可以拖拽学生到座位上，也可以拖拽座位上的学生进行位置交换。"
       />
       <el-tour-step
         :target="snapshotBtnRef?.$el || snapshotBtnRef"
@@ -461,6 +472,8 @@ const initClassInfo = () => {
 const tourOpen = ref(false);
 const classNameRef = useTemplateRef("classNameRef");
 const importBtnRef = useTemplateRef("importBtnRef");
+const layoutConfigRef = useTemplateRef("layoutConfigRef");
+const randomBtnRef = useTemplateRef("randomBtnRef");
 const snapshotBtnRef = useTemplateRef("snapshotBtnRef");
 const resetBtnRef = useTemplateRef("resetBtnRef");
 
