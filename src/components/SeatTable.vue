@@ -67,6 +67,56 @@
           </el-button>
         </div>
       </div>
+      <div
+        class="flex items-center gap-6 w-full bg-[#F9FAFB] rounded-[10px] h-16.5 px-4"
+      >
+        <div class="text-[#364153] text-base leading-6">座位布局：</div>
+        <div class="flex items-center">
+          <div class="text-[#364153] text-base leading-6">行数：</div>
+          <el-input-number
+            :model-value="rows"
+            @update:model-value="handleRowsChange"
+            :min="1"
+            :max="20"
+            :step="1"
+            size="small"
+          ></el-input-number>
+        </div>
+        <div class="flex items-center">
+          <div class="text-[#364153] text-base leading-6">列数：</div>
+          <el-input-number
+            :model-value="cols"
+            @update:model-value="handleColsChange"
+            :min="1"
+            :max="20"
+            :step="1"
+            size="small"
+          ></el-input-number>
+        </div>
+        <div class="flex items-center">
+          <div class="text-[#6A7282] text-base leading-6">总座位：</div>
+          <div class="text-[#6A7282] text-base leading-6">{{ totalSeats }}</div>
+        </div>
+        <div class="flex items-center">
+          <div class="text-[#6A7282] text-base leading-6">是否分组：</div>
+          <el-switch
+            v-model="enableGroup"
+            @change="handleGroupEnableChange"
+            :disabled="cols < 2"
+          ></el-switch>
+        </div>
+        <div class="flex items-center" v-show="enableGroup && cols >= 2">
+          <div class="text-[#6A7282] text-base leading-6">分组数：</div>
+          <el-input-number
+            v-model="groupCount"
+            :min="2"
+            :max="cols"
+            :step="1"
+            size="small"
+            @change="handleGroupCountChange"
+          ></el-input-number>
+        </div>
+      </div>
     </div>
     <div
       class="flex-1 overflow-hidden w-full flex gap-6"
@@ -105,13 +155,18 @@
         </div>
 
         <!-- 分组 -->
-        <div class="grid w-full grid-cols-4 gap-5 mb-6">
+        <div
+          v-if="enableGroup"
+          class="grid w-full gap-5 mb-6"
+          :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }"
+        >
           <div
-            v-for="gIndex in cols / 2"
+            v-for="(group, gIndex) in groupColumnSpans"
             :key="gIndex"
             class="group-item text-center py-3 border-none rounded-xl text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)]"
+            :style="{ gridColumn: `span ${group.span}` }"
           >
-            {{ `第${numberToChinese(gIndex)}组` }}
+            {{ `第${numberToChinese(gIndex + 1)}组` }}
           </div>
         </div>
 
@@ -493,6 +548,157 @@ const handleSaveClassInfo = (data: ClassInfo) => {
 const rows = ref(6);
 const cols = ref(8);
 
+// 分组配置
+const enableGroup = ref(false);
+const groupCount = ref(4);
+
+// 座位布局配置
+interface SeatLayoutConfig {
+  rows: number;
+  cols: number;
+  enableGroup: boolean;
+  groupCount: number;
+}
+
+// 初始化座位布局配置
+const initSeatLayoutConfig = () => {
+  const savedConfig = dbGet<SeatLayoutConfig>(DB_KEYS.SEAT_LAYOUT_CONFIG);
+  if (savedConfig) {
+    rows.value = savedConfig.rows;
+    cols.value = savedConfig.cols;
+    enableGroup.value = savedConfig.enableGroup;
+    groupCount.value = savedConfig.groupCount;
+  }
+};
+
+// 保存座位布局配置
+const saveSeatLayoutConfig = () => {
+  const config: SeatLayoutConfig = {
+    rows: rows.value,
+    cols: cols.value,
+    enableGroup: enableGroup.value,
+    groupCount: groupCount.value,
+  };
+  dbPut(DB_KEYS.SEAT_LAYOUT_CONFIG, config);
+};
+
+// 初始化座位布局配置
+initSeatLayoutConfig();
+
+// 处理行数变化
+const handleRowsChange = async (newValue: number) => {
+  // 检查是否有已就座的学生
+  const hasSeatedStudents = seats.value.some((seat) => seat.studentId);
+
+  if (hasSeatedStudents) {
+    try {
+      await ElMessageBox.confirm(
+        "修改行列数将清空现有座位安排，是否继续？",
+        "提示",
+        {
+          confirmButtonText: "确认修改",
+          cancelButtonText: "取消",
+          type: "warning",
+        },
+      );
+    } catch {
+      // 用户取消，不更新值
+      return;
+    }
+  }
+
+  // 更新行数
+  rows.value = newValue;
+  saveSeatLayoutConfig();
+  initSeats(true); // 强制重置座位
+  saveSeatsToDb();
+};
+
+// 处理列数变化
+const handleColsChange = async (newValue: number) => {
+  // 检查是否有已就座的学生
+  const hasSeatedStudents = seats.value.some((seat) => seat.studentId);
+
+  if (hasSeatedStudents) {
+    try {
+      await ElMessageBox.confirm(
+        "修改行列数将清空现有座位安排，是否继续？",
+        "提示",
+        {
+          confirmButtonText: "确认修改",
+          cancelButtonText: "取消",
+          type: "warning",
+        },
+      );
+    } catch {
+      // 用户取消，不更新值
+      return;
+    }
+  }
+
+  // 更新列数
+  cols.value = newValue;
+
+  // 如果列数小于2，自动关闭分组
+  if (newValue < 2 && enableGroup.value) {
+    enableGroup.value = false;
+  }
+
+  // 如果开启了分组，确保分组数不超过新的列数
+  if (enableGroup.value && groupCount.value > newValue) {
+    groupCount.value = Math.max(2, newValue);
+  }
+
+  saveSeatLayoutConfig();
+  initSeats(true); // 强制重置座位
+  saveSeatsToDb();
+};
+
+// 处理分组开关变化
+const handleGroupEnableChange = () => {
+  // 如果列数小于2，不允许开启分组
+  if (enableGroup.value && cols.value < 2) {
+    enableGroup.value = false;
+    ElMessage.warning("列数至少为2才能开启分组");
+    return;
+  }
+
+  // 如果开启分组，确保分组数不超过列数
+  if (enableGroup.value && groupCount.value > cols.value) {
+    groupCount.value = cols.value;
+  }
+  saveSeatLayoutConfig();
+};
+
+// 处理分组数变化
+const handleGroupCountChange = () => {
+  saveSeatLayoutConfig();
+};
+
+// 计算每组的列数分配
+const groupColumnSpans = computed(() => {
+  if (!enableGroup.value) return [];
+
+  const colsPerGroup = Math.floor(cols.value / groupCount.value);
+  const remainder = cols.value % groupCount.value;
+
+  const spans = [];
+  let currentCol = 1;
+
+  for (let i = 0; i < groupCount.value; i++) {
+    // 前 remainder 组多分配一列
+    const span = colsPerGroup + (i < remainder ? 1 : 0);
+    spans.push({
+      start: currentCol,
+      end: currentCol + span,
+      span: span,
+    });
+    currentCol += span;
+  }
+
+  return spans;
+});
+
 // 动态学生列表（支持从Excel导入）
 const studentList = ref<Student[]>([]);
 
@@ -544,15 +750,18 @@ const saveSeatsToDb = () => {
 const totalSeats = computed(() => rows.value * cols.value);
 
 // 初始化座位数据
-const initSeats = () => {
-  // 尝试从 utools.db 加载数据
-  const savedSeats = dbGet<Seat[]>(DB_KEYS.SEAT_DATA);
-  if (savedSeats && savedSeats.length > 0) {
-    seats.value = savedSeats;
-    return;
+const initSeats = (forceReset = false) => {
+  // 如果强制重置，直接初始化空座位
+  if (!forceReset) {
+    // 尝试从 utools.db 加载数据
+    const savedSeats = dbGet<Seat[]>(DB_KEYS.SEAT_DATA);
+    if (savedSeats && savedSeats.length > 0) {
+      seats.value = savedSeats;
+      return;
+    }
   }
 
-  // 如果没有保存的数据，初始化空座位
+  // 初始化空座位
   seats.value = Array(totalSeats.value)
     .fill(null)
     .map((_, index) => {
@@ -567,6 +776,8 @@ const initSeats = () => {
         col: col,
       };
     });
+
+  activeStudentStatus.value = "unSeated";
 };
 
 // 监听座位数据变化并保存到 utools.db
@@ -577,12 +788,6 @@ watch(
   },
   { deep: true },
 );
-
-// 监听行列变化，重新初始化座位
-watch([rows, cols], () => {
-  initSeats();
-  saveSeatsToDb();
-});
 
 // 初始化座位
 initSeats();
