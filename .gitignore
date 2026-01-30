@@ -1,9 +1,11 @@
 # Dependencies
 node_modules/
+public/preload/node_modules/
 
 # Build output
 dist/
 dist-ssr/
+plugin/
 *.local
 
 # Editor directories and files

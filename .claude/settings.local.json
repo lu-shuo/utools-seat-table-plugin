@@ -18,7 +18,11 @@
       "Bash(npm view:*)",
       "Bash(npm info:*)",
       "Bash(npm search:*)",
-      "WebFetch(domain:element-plus.org)"
+      "WebFetch(domain:element-plus.org)",
+      "Bash(test:*)",
+      "Bash(npm run build:plugin:*)",
+      "Bash(tree:*)",
+      "Bash(npm run verify:*)"
     ]
   }
 }
