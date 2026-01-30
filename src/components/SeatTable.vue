@@ -1147,10 +1147,10 @@ const handleRandomAssignSeats = async () => {
   }
 
   // 检查是否有未就座的学生
-  if (unSeatedStudentList.value.length === 0) {
-    ElMessage.info("所有学生已就座");
-    return;
-  }
+  // if (unSeatedStudentList.value.length === 0) {
+  //   ElMessage.info("所有学生已就座");
+  //   return;
+  // }
 
   // 检查是否有已就座的学生
   const hasSeatedStudents = seats.value.some((seat) => seat.studentId);
@@ -1158,7 +1158,7 @@ const handleRandomAssignSeats = async () => {
   if (hasSeatedStudents) {
     try {
       await ElMessageBox.confirm(
-        "随机排位将清空现有座位安排，是否继续？",
+        "随机排位将重置现有座位安排，是否继续？",
         "提示",
         {
           confirmButtonText: "确认排位",
@@ -1290,9 +1290,11 @@ const handleSaveSnapshot = async () => {
     seatTableClone.style.maxHeight = "none";
 
     // 移除底部提示元素（查找包含"提示:"的元素）
-    const tipElements = seatTableClone.querySelectorAll('.flex.items-center.gap-6');
+    const tipElements = seatTableClone.querySelectorAll(
+      ".flex.items-center.gap-6",
+    );
     tipElements.forEach((el) => {
-      if (el.textContent?.includes('💡 提示:')) {
+      if (el.textContent?.includes("💡 提示:")) {
         el.remove();
       }
     });
