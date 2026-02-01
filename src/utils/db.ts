@@ -15,8 +15,8 @@ export const DB_KEYS = {
  * 保存数据到 utools.db
  */
 export function dbPut<T>(key: string, data: T): boolean {
-  if (!window.utools) {
-    console.warn("utools 环境不可用，使用 localStorage 作为降级方案");
+  if (!window.utools?.db) {
+    console.warn("utools.db 不可用，使用 localStorage 作为降级方案");
     localStorage.setItem(key, JSON.stringify(data));
     return true;
   }
@@ -43,8 +43,8 @@ export function dbPut<T>(key: string, data: T): boolean {
  * 从 utools.db 获取数据
  */
 export function dbGet<T>(key: string): T | null {
-  if (!window.utools) {
-    console.warn("utools 环境不可用，使用 localStorage 作为降级方案");
+  if (!window.utools?.db) {
+    console.warn("utools.db 不可用，使用 localStorage 作为降级方案");
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : null;
   }
@@ -62,8 +62,8 @@ export function dbGet<T>(key: string): T | null {
  * 从 utools.db 删除数据
  */
 export function dbRemove(key: string): boolean {
-  if (!window.utools) {
-    console.warn("utools 环境不可用，使用 localStorage 作为降级方案");
+  if (!window.utools?.db) {
+    console.warn("utools.db 不可用，使用 localStorage 作为降级方案");
     localStorage.removeItem(key);
     return true;
   }

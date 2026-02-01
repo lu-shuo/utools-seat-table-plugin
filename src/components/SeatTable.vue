@@ -460,6 +460,9 @@ const classInfo = ref<ClassInfo>({
   teacherName: "",
 });
 
+const activeStudentStatus = ref<"seated" | "unSeated">("seated");
+const searchKey = ref("");
+
 // 初始化班级信息
 const initClassInfo = () => {
   const savedClassInfo = dbGet<ClassInfo>(DB_KEYS.CLASS_INFO);
@@ -911,9 +914,6 @@ const onDrop = (event: DragEvent, targetIndex: number) => {
 };
 
 // # 学生信息面板
-const activeStudentStatus = ref<"seated" | "unSeated">("seated");
-const searchKey = ref("");
-
 // 添加搜索相关计算属性
 const filteredHasStudentSeatList = computed(() => {
   if (!searchKey.value) {
