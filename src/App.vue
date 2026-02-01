@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import SeatTable from './components/SeatTable.vue'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const route = ref('')
 const enterAction = ref({})
@@ -40,23 +41,25 @@ console.log('[App] 初始 route 值:', route.value)
 </script>
 
 <template>
-  <!-- 调试信息 -->
-  <div v-if="!route" style="padding: 20px; background: #fff3cd; border: 2px solid #ffc107; margin: 20px; border-radius: 8px;">
-    <h3 style="color: #856404; margin: 0 0 10px 0;">🔍 调试信息</h3>
-    <div style="color: #856404; font-family: monospace; font-size: 14px;">
-      <div>route 值: "{{ route }}" (空字符串)</div>
-      <div>window.utools 存在: {{ hasUtools }}</div>
-      <div>window.utools.db 存在: {{ hasUtoolsDb }}</div>
-      <div style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 4px;">
-        💡 提示: 如果看到这个界面，说明 route 没有被正确设置。<br>
-        请按 F12 打开开发者工具查看控制台日志。
+  <el-config-provider :locale="zhCn">
+    <!-- 调试信息 -->
+    <div v-if="!route" style="padding: 20px; background: #fff3cd; border: 2px solid #ffc107; margin: 20px; border-radius: 8px;">
+      <h3 style="color: #856404; margin: 0 0 10px 0;">🔍 调试信息</h3>
+      <div style="color: #856404; font-family: monospace; font-size: 14px;">
+        <div>route 值: "{{ route }}" (空字符串)</div>
+        <div>window.utools 存在: {{ hasUtools }}</div>
+        <div>window.utools.db 存在: {{ hasUtoolsDb }}</div>
+        <div style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 4px;">
+          💡 提示: 如果看到这个界面，说明 route 没有被正确设置。<br>
+          请按 F12 打开开发者工具查看控制台日志。
+        </div>
       </div>
     </div>
-  </div>
 
-  <template v-if="route === 'seatTable'">
-    <SeatTable />
-  </template>
+    <template v-if="route === 'seatTable'">
+      <SeatTable />
+    </template>
+  </el-config-provider>
 </template>
 
 <style>
