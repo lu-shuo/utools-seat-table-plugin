@@ -1500,6 +1500,12 @@ const handleSaveSnapshot = async () => {
       }
     });
 
+    // 移除师徒图标（查找所有包含cursor-help类的元素）
+    const masterApprenticeIcons = seatTableClone.querySelectorAll('.cursor-help');
+    masterApprenticeIcons.forEach((icon) => {
+      icon.remove();
+    });
+
     wrapper.appendChild(seatTableClone);
 
     // 等待渲染
