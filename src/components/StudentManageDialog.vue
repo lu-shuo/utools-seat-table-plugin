@@ -31,8 +31,30 @@
         empty-text="暂无学生数据"
       >
         <el-table-column type="index" label="序号" width="60" align="center" />
-        <el-table-column prop="id" label="学号" width="120" align="center" />
-        <el-table-column prop="name" label="姓名" min-width="150" />
+        <el-table-column prop="id" label="学号" width="100" align="center" />
+        <el-table-column prop="name" label="姓名" width="120" />
+        <el-table-column label="角色" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.role === 'master'" type="success" size="small">
+              师傅
+            </el-tag>
+            <el-tag v-else-if="row.role === 'apprentice'" type="warning" size="small">
+              徒弟
+            </el-tag>
+            <span v-else class="text-gray-400">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="关系" min-width="150">
+          <template #default="{ row }">
+            <span v-if="row.role === 'master' && row.apprenticeIds?.length">
+              徒弟: {{ getApprenticeNames(row.apprenticeIds).join('、') }}
+            </span>
+            <span v-else-if="row.role === 'apprentice' && row.masterId">
+              师傅: {{ getMasterName(row.masterId) }}
+            </span>
+            <span v-else class="text-gray-400">-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{ row }">
             <el-button
@@ -104,6 +126,52 @@
             maxlength="20"
             show-word-limit
           />
+        </el-form-item>
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="formData.role" @change="handleRoleChange">
+            <el-radio :label="null">无</el-radio>
+            <el-radio label="master">师傅</el-radio>
+            <el-radio label="apprentice">徒弟</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item
+          v-if="formData.role === 'apprentice'"
+          label="选择师傅"
+          prop="masterId"
+        >
+          <el-select
+            v-model="formData.masterId"
+            placeholder="请选择师傅"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="student in availableMasters"
+              :key="student.id"
+              :label="`${student.name}（学号：${student.id}）`"
+              :value="student.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item
+          v-if="formData.role === 'master'"
+          label="选择徒弟"
+          prop="apprenticeIds"
+        >
+          <el-select
+            v-model="formData.apprenticeIds"
+            placeholder="请选择徒弟"
+            multiple
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="student in availableApprentices"
+              :key="student.id"
+              :label="`${student.name}（学号：${student.id}）`"
+              :value="student.id"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -200,6 +268,69 @@ const filteredStudentList = computed(() => {
   );
 });
 
+// 获取师傅姓名
+const getMasterName = (masterId: number) => {
+  const master = props.studentList.find((s) => s.id === masterId);
+  return master ? master.name : "未知";
+};
+
+// 获取徒弟姓名列表
+const getApprenticeNames = (apprenticeIds: number[]) => {
+  return apprenticeIds
+    .map((id) => {
+      const apprentice = props.studentList.find((s) => s.id === id);
+      return apprentice ? apprentice.name : null;
+    })
+    .filter((name) => name !== null) as string[];
+};
+
+// 可选的师傅列表（排除当前学生和已经是徒弟的学生）
+const availableMasters = computed(() => {
+  return props.studentList.filter(
+    (s) => {
+      // 排除自己
+      if (s.id === formData.value.id) return false;
+
+      // 编辑模式下，如果是当前学生的师傅，必须包含（用于正确回显）
+      if (editMode.value === "edit" && s.id === formData.value.masterId) {
+        return true;
+      }
+
+      // 排除已经是徒弟的学生
+      return s.role !== "apprentice";
+    }
+  );
+});
+
+// 可选的徒弟列表（排除当前学生和已经是师傅的学生，以及已有师傅的学生）
+const availableApprentices = computed(() => {
+  return props.studentList.filter(
+    (s) => {
+      // 排除自己
+      if (s.id === formData.value.id) return false;
+
+      // 编辑模式下，如果是当前学生的徒弟，必须包含（用于正确回显）
+      if (editMode.value === "edit" && formData.value.apprenticeIds?.includes(s.id)) {
+        return true;
+      }
+
+      // 排除已经是师傅的学生和已有师傅的学生
+      return s.role !== "master" && !s.masterId;
+    }
+  );
+});
+
+// 角色变化处理
+const handleRoleChange = (newRole: "master" | "apprentice" | null) => {
+  // 清空相关字段
+  if (newRole !== "master") {
+    formData.value.apprenticeIds = [];
+  }
+  if (newRole !== "apprentice") {
+    formData.value.masterId = null;
+  }
+};
+
 // 监听 modelValue 变化
 watch(
   () => props.modelValue,
@@ -235,6 +366,9 @@ const handleAdd = () => {
   formData.value = {
     id: 0,
     name: "",
+    role: null,
+    masterId: null,
+    apprenticeIds: [],
   };
   editDialogVisible.value = true;
   // 清除验证状态
@@ -264,8 +398,34 @@ const handleDelete = async (student: Student) => {
       }
     );
 
-    // 从列表中删除
-    const newList = props.studentList.filter((s) => s.id !== student.id);
+    let newList = props.studentList.filter((s) => s.id !== student.id);
+
+    // 清理师徒关系
+    if (student.role === "master" && student.apprenticeIds?.length) {
+      // 如果是师傅，清理徒弟的masterId
+      newList = newList.map((s) => {
+        if (student.apprenticeIds?.includes(s.id)) {
+          return { ...s, masterId: null, role: null };
+        }
+        return s;
+      });
+    } else if (student.role === "apprentice" && student.masterId) {
+      // 如果是徒弟，清理师傅的apprenticeIds
+      newList = newList.map((s) => {
+        if (s.id === student.masterId) {
+          const newApprenticeIds = (s.apprenticeIds || []).filter(
+            (id) => id !== student.id
+          );
+          return {
+            ...s,
+            apprenticeIds: newApprenticeIds,
+            role: newApprenticeIds.length > 0 ? "master" : null,
+          };
+        }
+        return s;
+      });
+    }
+
     emit("update:studentList", newList);
     ElMessage.success("删除成功");
   } catch {
@@ -280,20 +440,76 @@ const handleConfirmEdit = async () => {
   try {
     await formRef.value.validate();
 
+    let newList = [...props.studentList];
+
     if (editMode.value === "add") {
       // 添加学生
-      const newList = [...props.studentList, { ...formData.value }];
-      emit("update:studentList", newList);
-      ElMessage.success("添加成功");
+      newList.push({ ...formData.value });
     } else {
-      // 编辑学生
-      const newList = props.studentList.map((s) =>
+      // 编辑学生 - 先清理旧关系
+      const oldStudent = editingStudent.value;
+      if (oldStudent) {
+        // 如果旧角色是师傅，清理徒弟的masterId
+        if (oldStudent.role === "master" && oldStudent.apprenticeIds?.length) {
+          newList = newList.map((s) => {
+            if (oldStudent.apprenticeIds?.includes(s.id)) {
+              return { ...s, masterId: null, role: null };
+            }
+            return s;
+          });
+        }
+        // 如果旧角色是徒弟，清理师傅的apprenticeIds
+        if (oldStudent.role === "apprentice" && oldStudent.masterId) {
+          newList = newList.map((s) => {
+            if (s.id === oldStudent.masterId) {
+              const newApprenticeIds = (s.apprenticeIds || []).filter(
+                (id) => id !== oldStudent.id
+              );
+              return {
+                ...s,
+                apprenticeIds: newApprenticeIds,
+                role: newApprenticeIds.length > 0 ? "master" : null,
+              };
+            }
+            return s;
+          });
+        }
+      }
+
+      // 更新当前学生
+      newList = newList.map((s) =>
         s.id === editingStudent.value?.id ? { ...formData.value } : s
       );
-      emit("update:studentList", newList);
-      ElMessage.success("修改成功");
     }
 
+    // 处理新的师徒关系
+    if (formData.value.role === "master" && formData.value.apprenticeIds?.length) {
+      // 设置为师傅 - 更新徒弟的masterId
+      newList = newList.map((s) => {
+        if (formData.value.apprenticeIds?.includes(s.id)) {
+          return { ...s, role: "apprentice", masterId: formData.value.id };
+        }
+        return s;
+      });
+    } else if (formData.value.role === "apprentice" && formData.value.masterId) {
+      // 设置为徒弟 - 更新师傅的apprenticeIds
+      newList = newList.map((s) => {
+        if (s.id === formData.value.masterId) {
+          const apprenticeIds = s.apprenticeIds || [];
+          if (!apprenticeIds.includes(formData.value.id)) {
+            return {
+              ...s,
+              role: "master",
+              apprenticeIds: [...apprenticeIds, formData.value.id],
+            };
+          }
+        }
+        return s;
+      });
+    }
+
+    emit("update:studentList", newList);
+    ElMessage.success(editMode.value === "add" ? "添加成功" : "修改成功");
     editDialogVisible.value = false;
   } catch (error) {
     console.log("表单验证失败", error);

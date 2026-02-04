@@ -213,6 +213,43 @@
               >
                 {{ seat.studentId }}
               </div>
+              <!-- 师徒图标 -->
+              <el-popover
+                v-if="getStudentRole(seat.studentId)"
+                placement="top"
+                :width="200"
+                trigger="hover"
+              >
+                <template #reference>
+                  <div
+                    class="absolute left-2 bottom-2 w-7 h-7 rounded-full flex items-center justify-center text-white text-sm cursor-help"
+                    :style="{
+                      background: getStudentRole(seat.studentId) === 'master'
+                        ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                        : 'linear-gradient(135deg, #60a5fa, #6366f1)'
+                    }"
+                  >
+                    {{ getStudentRole(seat.studentId) === 'master' ? '师' : '徒' }}
+                  </div>
+                </template>
+                <div class="text-sm">
+                  <div class="font-semibold mb-2">
+                    {{ getStudentRole(seat.studentId) === 'master' ? '👨‍🏫 师傅' : '🎓 徒弟' }}
+                  </div>
+                  <div v-if="getStudentRole(seat.studentId) === 'master'">
+                    <div class="text-gray-600 mb-1">徒弟：</div>
+                    <div class="text-gray-800">
+                      {{ getStudentApprentices(seat.studentId).join('、') || '暂无' }}
+                    </div>
+                  </div>
+                  <div v-else>
+                    <div class="text-gray-600 mb-1">师傅：</div>
+                    <div class="text-gray-800">
+                      {{ getStudentMaster(seat.studentId) || '暂无' }}
+                    </div>
+                  </div>
+                </div>
+              </el-popover>
               <img
                 src="../assets/images/delete.svg"
                 class="delete-icon absolute object-contain w-8 h-8 cursor-pointer right-2 top-2"
@@ -338,7 +375,7 @@
                 :key="seat.studentId!"
                 class="w-full p-3 box-border flex rounded-[10px] border border-[#b9f8cf] bg-[#f0fdf4]"
               >
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-1">
                   <div
                     class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#00c950]"
                   >
@@ -347,9 +384,46 @@
                       class="flex-shrink-0 object-contain w-4 h-4"
                     />
                   </div>
-                  <div>
-                    <div class="text-[#101828] text-base leading-6 mb-[2px]">
+                  <div class="flex-1">
+                    <div class="text-[#101828] text-base leading-6 mb-[2px] flex items-center gap-2">
                       {{ seat.studentName }}（学号：{{ seat.studentId }}）
+                      <!-- 师徒图标 -->
+                      <el-popover
+                        v-if="getStudentRole(seat.studentId)"
+                        placement="top"
+                        :width="180"
+                        trigger="hover"
+                      >
+                        <template #reference>
+                          <span
+                            class="inline-flex items-center justify-center w-5 h-5 rounded-full text-white text-xs cursor-help"
+                            :style="{
+                              background: getStudentRole(seat.studentId) === 'master'
+                                ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                                : 'linear-gradient(135deg, #60a5fa, #6366f1)'
+                            }"
+                          >
+                            {{ getStudentRole(seat.studentId) === 'master' ? '师' : '徒' }}
+                          </span>
+                        </template>
+                        <div class="text-sm">
+                          <div class="font-semibold mb-2">
+                            {{ getStudentRole(seat.studentId) === 'master' ? '👨‍🏫 师傅' : '🎓 徒弟' }}
+                          </div>
+                          <div v-if="getStudentRole(seat.studentId) === 'master'">
+                            <div class="text-gray-600 mb-1">徒弟：</div>
+                            <div class="text-gray-800">
+                              {{ getStudentApprentices(seat.studentId).join('、') || '暂无' }}
+                            </div>
+                          </div>
+                          <div v-else>
+                            <div class="text-gray-600 mb-1">师傅：</div>
+                            <div class="text-gray-800">
+                              {{ getStudentMaster(seat.studentId) || '暂无' }}
+                            </div>
+                          </div>
+                        </div>
+                      </el-popover>
                     </div>
                     <div class="text-[#4a5565] text-xs leading-4">
                       座位号：{{ seat.id }}（第{{ seat.row }}排第{{
@@ -377,7 +451,7 @@
                 draggable="true"
                 @dragstart="onStudentDragStart($event, student)"
               >
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-1">
                   <div
                     class="flex w-8 h-8 rounded-full justify-center items-center flex-shrink-0 bg-[#f54900]"
                   >
@@ -386,9 +460,46 @@
                       class="flex-shrink-0 object-contain w-4 h-4"
                     />
                   </div>
-                  <div>
-                    <div class="text-[#101828] text-base leading-6">
+                  <div class="flex-1">
+                    <div class="text-[#101828] text-base leading-6 flex items-center gap-2">
                       {{ student.name }}（学号：{{ student.id }}）
+                      <!-- 师徒图标 -->
+                      <el-popover
+                        v-if="student.role"
+                        placement="top"
+                        :width="180"
+                        trigger="hover"
+                      >
+                        <template #reference>
+                          <span
+                            class="inline-flex items-center justify-center w-5 h-5 rounded-full text-white text-xs cursor-help"
+                            :style="{
+                              background: student.role === 'master'
+                                ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                                : 'linear-gradient(135deg, #60a5fa, #6366f1)'
+                            }"
+                          >
+                            {{ student.role === 'master' ? '师' : '徒' }}
+                          </span>
+                        </template>
+                        <div class="text-sm">
+                          <div class="font-semibold mb-2">
+                            {{ student.role === 'master' ? '👨‍🏫 师傅' : '🎓 徒弟' }}
+                          </div>
+                          <div v-if="student.role === 'master'">
+                            <div class="text-gray-600 mb-1">徒弟：</div>
+                            <div class="text-gray-800">
+                              {{ getStudentApprentices(student.id).join('、') || '暂无' }}
+                            </div>
+                          </div>
+                          <div v-else>
+                            <div class="text-gray-600 mb-1">师傅：</div>
+                            <div class="text-gray-800">
+                              {{ getStudentMaster(student.id) || '暂无' }}
+                            </div>
+                          </div>
+                        </div>
+                      </el-popover>
                     </div>
                   </div>
                 </div>
@@ -633,6 +744,35 @@ const handleStudentListUpdate = (newList: Student[]) => {
   });
 };
 
+// 获取学生角色
+const getStudentRole = (studentId: number | null) => {
+  if (!studentId) return null;
+  const student = studentList.value.find((s) => s.id === studentId);
+  return student?.role || null;
+};
+
+// 获取学生的师傅姓名
+const getStudentMaster = (studentId: number | null) => {
+  if (!studentId) return null;
+  const student = studentList.value.find((s) => s.id === studentId);
+  if (!student?.masterId) return null;
+  const master = studentList.value.find((s) => s.id === student.masterId);
+  return master?.name || null;
+};
+
+// 获取学生的徒弟姓名列表
+const getStudentApprentices = (studentId: number | null) => {
+  if (!studentId) return [];
+  const student = studentList.value.find((s) => s.id === studentId);
+  if (!student?.apprenticeIds?.length) return [];
+  return student.apprenticeIds
+    .map((id) => {
+      const apprentice = studentList.value.find((s) => s.id === id);
+      return apprentice?.name || null;
+    })
+    .filter((name) => name !== null) as string[];
+};
+
 // 行列配置
 const rows = ref(6);
 const cols = ref(8);
@@ -801,7 +941,9 @@ const initStudentList = () => {
 
 // 保存学生列表到 utools.db
 const saveStudentList = () => {
-  dbPut(DB_KEYS.STUDENT_LIST, toRaw(studentList.value));
+  // 深度克隆，去除所有层级的响应式代理（包括嵌套的 apprenticeIds 数组）
+  const plainData = JSON.parse(JSON.stringify(studentList.value));
+  dbPut(DB_KEYS.STUDENT_LIST, plainData);
 };
 
 // 初始化学生列表
