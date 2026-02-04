@@ -246,15 +246,25 @@
           class="flex-shrink-0 flex items-center justify-between self-stretch text-[#101828] text-base leading-6 mb-4"
         >
           <span>学生列表</span>
-          <el-button
-            ref="importBtnRef"
-            type="primary"
-            text
-            :icon="Upload"
-            @click="handleImportExcel"
-          >
-            从Excel导入
-          </el-button>
+          <div class="flex items-center">
+            <el-button
+              type="success"
+              text
+              :icon="Edit"
+              @click="showStudentManageDialog"
+            >
+              管理学生
+            </el-button>
+            <el-button
+              ref="importBtnRef"
+              type="primary"
+              text
+              :icon="Upload"
+              @click="handleImportExcel"
+            >
+              从Excel导入
+            </el-button>
+          </div>
         </div>
 
         <!-- 空状态提示 -->
@@ -396,6 +406,13 @@
       @confirm="handleSaveClassInfo"
     />
 
+    <!-- 学生管理对话框 -->
+    <StudentManageDialog
+      v-model="studentManageDialogVisible"
+      :student-list="studentList"
+      @update:student-list="handleStudentListUpdate"
+    />
+
     <!-- 漫游式引导 -->
     <el-tour v-model="tourOpen" :mask="{ color: 'rgba(0, 0, 0, 0.5)' }">
       <el-tour-step
@@ -445,6 +462,7 @@ import type { Seat, Student } from "@/interface";
 import { Search, Upload, Edit, Camera } from "@element-plus/icons-vue";
 import { useFullscreen } from "@vueuse/core";
 import EditClassDialog from "./EditClassDialog.vue";
+import StudentManageDialog from "./StudentManageDialog.vue";
 import { dbGet, dbPut, DB_KEYS } from "@/utils/db";
 import { needsMigration, migrateFromLocalStorage } from "@/utils/migrate";
 import * as htmlToImage from "html-to-image";
@@ -573,6 +591,46 @@ const handleSaveClassInfo = (data: ClassInfo) => {
   classInfo.value = { ...data };
   saveClassInfo();
   ElMessage.success("班级信息已更新");
+};
+
+// 学生管理对话框
+const studentManageDialogVisible = ref(false);
+
+// 显示学生管理对话框
+const showStudentManageDialog = () => {
+  studentManageDialogVisible.value = true;
+};
+
+// 处理学生列表更新（从学生管理对话框）
+const handleStudentListUpdate = (newList: Student[]) => {
+  // 找出被删除的学生ID
+  const oldIds = new Set(studentList.value.map((s) => s.id));
+  const newIds = new Set(newList.map((s) => s.id));
+  const deletedIds = [...oldIds].filter((id) => !newIds.has(id));
+
+  // 更新学生列表
+  studentList.value = newList;
+  saveStudentList();
+
+  // 清理座位表中已删除学生的座位
+  if (deletedIds.length > 0) {
+    seats.value.forEach((seat) => {
+      if (seat.studentId && deletedIds.includes(seat.studentId)) {
+        seat.studentId = null;
+        seat.studentName = null;
+      }
+    });
+  }
+
+  // 更新已就座学生的姓名（如果姓名被修改）
+  seats.value.forEach((seat) => {
+    if (seat.studentId) {
+      const student = newList.find((s) => s.id === seat.studentId);
+      if (student && student.name !== seat.studentName) {
+        seat.studentName = student.name;
+      }
+    }
+  });
 };
 
 // 行列配置
@@ -1074,6 +1132,7 @@ const handleImportExcel = async () => {
       );
       // 执行随机排座
       randomAssignSeats();
+      activeStudentStatus.value = "seated";
     } catch {
       // 用户选择稍后手动安排
       activeStudentStatus.value = "unSeated";
