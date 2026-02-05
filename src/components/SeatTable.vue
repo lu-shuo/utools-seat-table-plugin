@@ -7,6 +7,9 @@
       background: -moz-linear-gradient(135deg, #eff6ff, #e0e7ff);
       background: linear-gradient(135deg, #eff6ff, #e0e7ff);
     "
+    v-loading="snapshotLoading"
+    element-loading-background="transparent"
+    element-loading-text="快照生成中..."
   >
     <div
       ref="classInfoEl"
@@ -224,28 +227,38 @@
                   <div
                     class="absolute left-2 bottom-2 w-7 h-7 rounded-full flex items-center justify-center text-white text-sm cursor-help"
                     :style="{
-                      background: getStudentRole(seat.studentId) === 'master'
-                        ? 'linear-gradient(135deg, #fbbf24, #f97316)'
-                        : 'linear-gradient(135deg, #60a5fa, #6366f1)'
+                      background:
+                        getStudentRole(seat.studentId) === 'master'
+                          ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                          : 'linear-gradient(135deg, #60a5fa, #6366f1)',
                     }"
                   >
-                    {{ getStudentRole(seat.studentId) === 'master' ? '师' : '徒' }}
+                    {{
+                      getStudentRole(seat.studentId) === "master" ? "师" : "徒"
+                    }}
                   </div>
                 </template>
                 <div class="text-sm">
                   <div class="font-semibold mb-2">
-                    {{ getStudentRole(seat.studentId) === 'master' ? '👨‍🏫 师傅' : '🎓 徒弟' }}
+                    {{
+                      getStudentRole(seat.studentId) === "master"
+                        ? "👨‍🏫 师傅"
+                        : "🎓 徒弟"
+                    }}
                   </div>
                   <div v-if="getStudentRole(seat.studentId) === 'master'">
                     <div class="text-gray-600 mb-1">徒弟：</div>
                     <div class="text-gray-800">
-                      {{ getStudentApprentices(seat.studentId).join('、') || '暂无' }}
+                      {{
+                        getStudentApprentices(seat.studentId).join("、") ||
+                        "暂无"
+                      }}
                     </div>
                   </div>
                   <div v-else>
                     <div class="text-gray-600 mb-1">师傅：</div>
                     <div class="text-gray-800">
-                      {{ getStudentMaster(seat.studentId) || '暂无' }}
+                      {{ getStudentMaster(seat.studentId) || "暂无" }}
                     </div>
                   </div>
                 </div>
@@ -385,7 +398,9 @@
                     />
                   </div>
                   <div class="flex-1">
-                    <div class="text-[#101828] text-base leading-6 mb-[2px] flex items-center gap-2">
+                    <div
+                      class="text-[#101828] text-base leading-6 mb-[2px] flex items-center gap-2"
+                    >
                       {{ seat.studentName }}（学号：{{ seat.studentId }}）
                       <!-- 师徒图标 -->
                       <el-popover
@@ -398,28 +413,43 @@
                           <span
                             class="inline-flex items-center justify-center w-5 h-5 rounded-full text-white text-xs cursor-help"
                             :style="{
-                              background: getStudentRole(seat.studentId) === 'master'
-                                ? 'linear-gradient(135deg, #fbbf24, #f97316)'
-                                : 'linear-gradient(135deg, #60a5fa, #6366f1)'
+                              background:
+                                getStudentRole(seat.studentId) === 'master'
+                                  ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                                  : 'linear-gradient(135deg, #60a5fa, #6366f1)',
                             }"
                           >
-                            {{ getStudentRole(seat.studentId) === 'master' ? '师' : '徒' }}
+                            {{
+                              getStudentRole(seat.studentId) === "master"
+                                ? "师"
+                                : "徒"
+                            }}
                           </span>
                         </template>
                         <div class="text-sm">
                           <div class="font-semibold mb-2">
-                            {{ getStudentRole(seat.studentId) === 'master' ? '👨‍🏫 师傅' : '🎓 徒弟' }}
+                            {{
+                              getStudentRole(seat.studentId) === "master"
+                                ? "👨‍🏫 师傅"
+                                : "🎓 徒弟"
+                            }}
                           </div>
-                          <div v-if="getStudentRole(seat.studentId) === 'master'">
+                          <div
+                            v-if="getStudentRole(seat.studentId) === 'master'"
+                          >
                             <div class="text-gray-600 mb-1">徒弟：</div>
                             <div class="text-gray-800">
-                              {{ getStudentApprentices(seat.studentId).join('、') || '暂无' }}
+                              {{
+                                getStudentApprentices(seat.studentId).join(
+                                  "、",
+                                ) || "暂无"
+                              }}
                             </div>
                           </div>
                           <div v-else>
                             <div class="text-gray-600 mb-1">师傅：</div>
                             <div class="text-gray-800">
-                              {{ getStudentMaster(seat.studentId) || '暂无' }}
+                              {{ getStudentMaster(seat.studentId) || "暂无" }}
                             </div>
                           </div>
                         </div>
@@ -461,7 +491,9 @@
                     />
                   </div>
                   <div class="flex-1">
-                    <div class="text-[#101828] text-base leading-6 flex items-center gap-2">
+                    <div
+                      class="text-[#101828] text-base leading-6 flex items-center gap-2"
+                    >
                       {{ student.name }}（学号：{{ student.id }}）
                       <!-- 师徒图标 -->
                       <el-popover
@@ -474,28 +506,34 @@
                           <span
                             class="inline-flex items-center justify-center w-5 h-5 rounded-full text-white text-xs cursor-help"
                             :style="{
-                              background: student.role === 'master'
-                                ? 'linear-gradient(135deg, #fbbf24, #f97316)'
-                                : 'linear-gradient(135deg, #60a5fa, #6366f1)'
+                              background:
+                                student.role === 'master'
+                                  ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                                  : 'linear-gradient(135deg, #60a5fa, #6366f1)',
                             }"
                           >
-                            {{ student.role === 'master' ? '师' : '徒' }}
+                            {{ student.role === "master" ? "师" : "徒" }}
                           </span>
                         </template>
                         <div class="text-sm">
                           <div class="font-semibold mb-2">
-                            {{ student.role === 'master' ? '👨‍🏫 师傅' : '🎓 徒弟' }}
+                            {{
+                              student.role === "master" ? "👨‍🏫 师傅" : "🎓 徒弟"
+                            }}
                           </div>
                           <div v-if="student.role === 'master'">
                             <div class="text-gray-600 mb-1">徒弟：</div>
                             <div class="text-gray-800">
-                              {{ getStudentApprentices(student.id).join('、') || '暂无' }}
+                              {{
+                                getStudentApprentices(student.id).join("、") ||
+                                "暂无"
+                              }}
                             </div>
                           </div>
                           <div v-else>
                             <div class="text-gray-600 mb-1">师傅：</div>
                             <div class="text-gray-800">
-                              {{ getStudentMaster(student.id) || '暂无' }}
+                              {{ getStudentMaster(student.id) || "暂无" }}
                             </div>
                           </div>
                         </div>
@@ -1433,6 +1471,31 @@ const handleSaveSnapshot = async () => {
     }
   }
 
+  // 检查是否存在师徒关系，询问用户是否保留师徒图标
+  let shouldRemoveMasterApprenticeIcons = false;
+  const hasMasterApprenticeRelation = studentList.value.some(
+    (s) => s.role === "master" || s.role === "apprentice",
+  );
+
+  if (hasMasterApprenticeRelation) {
+    try {
+      await ElMessageBox.confirm(
+        "检测到存在师徒关系，快照中是否保留师徒图标？",
+        "提示",
+        {
+          confirmButtonText: "保留图标",
+          cancelButtonText: "不保留",
+          type: "info",
+        },
+      );
+      // 用户选择保留，不移除
+      shouldRemoveMasterApprenticeIcons = false;
+    } catch {
+      // 用户选择不保留，移除
+      shouldRemoveMasterApprenticeIcons = true;
+    }
+  }
+
   snapshotLoading.value = true;
 
   try {
@@ -1500,11 +1563,14 @@ const handleSaveSnapshot = async () => {
       }
     });
 
-    // 移除师徒图标（查找所有包含cursor-help类的元素）
-    const masterApprenticeIcons = seatTableClone.querySelectorAll('.cursor-help');
-    masterApprenticeIcons.forEach((icon) => {
-      icon.remove();
-    });
+    // 根据用户选择决定是否移除师徒图标
+    if (shouldRemoveMasterApprenticeIcons) {
+      const masterApprenticeIcons =
+        seatTableClone.querySelectorAll(".cursor-help");
+      masterApprenticeIcons.forEach((icon) => {
+        icon.remove();
+      });
+    }
 
     wrapper.appendChild(seatTableClone);
 
