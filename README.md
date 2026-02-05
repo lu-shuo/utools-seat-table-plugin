@@ -48,11 +48,11 @@ npm run build
 npm run build:plugin
 ```
 
-这会在 `plugin/` 目录生成可直接安装到 uTools 的插件文件。
+这会在 `dist/` 目录生成可直接安装到 uTools 的插件文件。
 
 ### 打包为 .upx 文件
 
-1. 将 `plugin/` 目录压缩为 zip 文件
+1. 将 `dist/` 目录压缩为 zip 文件
 2. 将文件扩展名改为 `.upx`
 3. 在 uTools 开发者工具中测试
 
@@ -123,13 +123,13 @@ uTools 插件运行在两个独立的 JavaScript 环境中：
 ```javascript
 // 插件被激活
 window.utools.onPluginEnter((action) => {
-  console.log('插件激活', action.code)
-})
+  console.log("插件激活", action.code);
+});
 
 // 插件被隐藏
 window.utools.onPluginOut((isKill) => {
-  console.log('插件隐藏', isKill)
-})
+  console.log("插件隐藏", isKill);
+});
 ```
 
 ## 🎨 样式系统
