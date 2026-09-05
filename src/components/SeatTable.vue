@@ -117,6 +117,13 @@
             :disabled="cols < 2"
           ></el-switch>
         </div>
+        <div class="flex items-center">
+          <div class="text-[#6A7282] text-base leading-6">镜像：</div>
+          <el-switch
+            v-model="mirrorSeats"
+            @change="handleMirrorChange"
+          ></el-switch>
+        </div>
         <div class="flex items-center" v-show="enableGroup && cols >= 2">
           <div class="text-[#6A7282] text-base leading-6">分组数：</div>
           <el-input-number
@@ -155,6 +162,7 @@
 
         <!-- 讲台 -->
         <div
+          v-if="!mirrorSeats"
           class="mb-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] text-white text-center text-base leading-6"
           style="
             background: #00c950;
@@ -168,7 +176,7 @@
 
         <!-- 分组 -->
         <div
-          v-if="enableGroup"
+          v-if="enableGroup && !mirrorSeats"
           class="grid w-full gap-5 mb-6"
           :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }"
         >
@@ -182,14 +190,22 @@
           </div>
         </div>
 
+        <!-- 提示 -->
+        <div
+          v-if="mirrorSeats"
+          class="flex items-center gap-6 w-full p-4 bg-[#EFF6FF] rounded-[10px] h-16.5 px-4 border-[#BEDBFF] border mb-6 text-[#1C398E] text-[14px] leading-5"
+        >
+          💡 提示: 拖拽右侧学生列表中的卡片到空座位，或点击顶部"随机排位"按钮
+        </div>
+
         <!-- 座位网格 -->
         <div
           class="grid w-full gap-5"
           :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }"
         >
           <div
-            v-for="(seat, index) in seats"
-            :key="index"
+            v-for="seat in displaySeats"
+            :key="seat.id"
             class="seat-item w-full h-[120px] rounded-[10px] border-2 flex items-center justify-center relative"
             :class="[
               seat.studentId
@@ -202,13 +218,13 @@
                 : ''
             "
             @dragover.prevent
-            @drop="onDrop($event, index)"
+            @drop="onDrop($event, getSeatIndex(seat))"
           >
             <div
               v-if="seat.studentId"
               class="seat-content w-full h-full flex flex-col items-center justify-center text-[#101828] text-xl leading-5 cursor-move relative"
               draggable="true"
-              @dragstart="onDragStart($event, index)"
+              @dragstart="onDragStart($event, getSeatIndex(seat))"
             >
               {{ seat.studentName }}
               <div
@@ -282,8 +298,39 @@
           </div>
         </div>
 
+        <!-- 分组 -->
+        <div
+          v-if="enableGroup && mirrorSeats"
+          class="grid w-full gap-5 mt-6"
+          :style="{ gridTemplateColumns: `repeat(${cols}, 1fr)` }"
+        >
+          <div
+            v-for="(group, gIndex) in groupColumnSpans"
+            :key="gIndex"
+            class="group-item text-center py-3 border-none rounded-xl text-white font-semibold shadow-[0_4px_10px_rgba(108,92,231,0.2)]"
+            :style="{ gridColumn: `span ${group.span}` }"
+          >
+            {{ `第${numberToChinese(gIndex + 1)}组` }}
+          </div>
+        </div>
+
+        <!-- 讲台 -->
+        <div
+          v-if="mirrorSeats"
+          class="mt-5 flex py-[11px] pb-[13px] justify-center items-center self-stretch rounded-[10px] text-white text-center text-base leading-6"
+          style="
+            background: #00c950;
+            background: -webkit-linear-gradient(left, #00c950, #00bc7d);
+            background: -moz-linear-gradient(left, #00c950, #00bc7d);
+            background: linear-gradient(to right, #00c950, #00bc7d);
+          "
+        >
+          讲 台
+        </div>
+
         <!-- 提示 -->
         <div
+          v-if="!mirrorSeats"
           class="flex items-center gap-6 w-full p-4 bg-[#EFF6FF] rounded-[10px] h-16.5 px-4 border-[#BEDBFF] border mt-6 text-[#1C398E] text-[14px] leading-5"
         >
           💡 提示: 拖拽右侧学生列表中的卡片到空座位，或点击顶部"随机排位"按钮
@@ -614,6 +661,7 @@ import EditClassDialog from "./EditClassDialog.vue";
 import StudentManageDialog from "./StudentManageDialog.vue";
 import { dbGet, dbPut, DB_KEYS } from "@/utils/db";
 import { needsMigration, migrateFromLocalStorage } from "@/utils/migrate";
+import { getDisplaySeats } from "@/utils/seatLayout";
 import * as htmlToImage from "html-to-image";
 
 // 班级信息
@@ -818,6 +866,7 @@ const cols = ref(8);
 // 分组配置
 const enableGroup = ref(false);
 const groupCount = ref(4);
+const mirrorSeats = ref(false);
 
 // 座位布局配置
 interface SeatLayoutConfig {
@@ -825,6 +874,7 @@ interface SeatLayoutConfig {
   cols: number;
   enableGroup: boolean;
   groupCount: number;
+  mirrorSeats?: boolean;
 }
 
 // 初始化座位布局配置
@@ -835,6 +885,7 @@ const initSeatLayoutConfig = () => {
     cols.value = savedConfig.cols;
     enableGroup.value = savedConfig.enableGroup;
     groupCount.value = savedConfig.groupCount;
+    mirrorSeats.value = !!savedConfig.mirrorSeats;
   }
 };
 
@@ -845,6 +896,7 @@ const saveSeatLayoutConfig = () => {
     cols: cols.value,
     enableGroup: enableGroup.value,
     groupCount: groupCount.value,
+    mirrorSeats: mirrorSeats.value,
   };
   dbPut(DB_KEYS.SEAT_LAYOUT_CONFIG, config);
 };
@@ -942,6 +994,10 @@ const handleGroupCountChange = () => {
   saveSeatLayoutConfig();
 };
 
+const handleMirrorChange = () => {
+  saveSeatLayoutConfig();
+};
+
 // 计算每组的列数分配
 const groupColumnSpans = computed(() => {
   if (!enableGroup.value) return [];
@@ -989,6 +1045,10 @@ initStudentList();
 
 // 座位数据
 const seats = ref<Seat[]>([]);
+const displaySeats = computed(() =>
+  getDisplaySeats(seats.value, rows.value, cols.value, mirrorSeats.value),
+);
+const getSeatIndex = (seat: Seat) => seats.value.findIndex((s) => s.id === seat.id);
 const totalStudentCount = computed(() => studentList.value.length);
 const seatedStudentCount = computed(() => {
   return seats.value.filter((seat) => seat.studentId).length;
